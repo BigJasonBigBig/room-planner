@@ -171,6 +171,7 @@ dialog{width:94vw}
         <label>天花高 cm<input id="rh" type="number" min="200" max="400" step="5"></label>
       </div>
       <p class="tip" id="area"></p>
+      <div id="wlist"></div>
       <label class="f">地板<select id="floor"></select></label>
       <label class="f">牆色<input id="wall" type="color"></label>
       <label class="f">天花板<select id="ceil"><option value="flat">平頂天花</option><option value="cove">間接照明天花</option><option value="none">不做天花（原樓板）</option></select></label>
@@ -540,12 +541,12 @@ function draw2d(){const W=S.room.w,D=S.room.d,base=Math.max(W,D),m=base/(mq.matc
   /* partition walls */
   const walls=S.walls.map(w=>{const r=wrect(w),hz=isH(w),s=w.id===selW,hh=w.h||H,half=w.h&&w.h<H;
     const ps=wallPieces(w,H).filter(p=>p[2]===0&&p[3]>=hh).map(([a,b])=>hz?`<rect x="${a}" y="${r.y1}" width="${b-a}" height="${r.y2-r.y1}"/>`:`<rect x="${r.x1}" y="${a}" width="${r.x2-r.x1}" height="${b-a}"/>`).join('');
-    return`<g class="wl" data-w="${w.id}"><rect x="${r.x1}" y="${r.y1}" width="${r.x2-r.x1}" height="${r.y2-r.y1}" fill="transparent" stroke="${s?'var(--acc)':'var(--ink)'}" stroke-opacity="${s?1:0.35}" stroke-width="${s?fs*0.2:fs*0.06}"/><g fill="${s?'var(--acc)':'var(--ink)'}" fill-opacity="${half?0.45:0.88}">${ps}</g></g>`}).join('');
+    return`<g class="wl" data-w="${w.id}"><line x1="${w.x1}" y1="${w.y1}" x2="${w.x2}" y2="${w.y2}" stroke="transparent" stroke-width="${Math.max(w.t,30*upp)}" stroke-linecap="square"/><rect x="${r.x1}" y="${r.y1}" width="${r.x2-r.x1}" height="${r.y2-r.y1}" fill="transparent" stroke="${s?'var(--acc)':'var(--ink)'}" stroke-opacity="${s?1:0.35}" stroke-width="${s?fs*0.2:fs*0.06}"/><g fill="${s?'var(--acc)':'var(--ink)'}" fill-opacity="${half?0.45:0.88}">${ps}</g></g>`}).join('');
   const layer=S.items.filter(it=>showC||MOUNT(it.type)!=='c').map(it=>({it,o:isRug(it.type)?0:MOUNT(it.type)==='f'?1:MOUNT(it.type)==='w'?2:3})).sort((a,b)=>a.o-b.o);
   const items=layer.map(({it,o})=>{const s=it.id===sel,bd=bad.has(it.id),tc=lum(it.color)>0.55?'#2a2925':'#fff';
     const lbl=s?`<text transform="rotate(${-it.rot})" y="${fp(it).d/2+fs*1.3}" text-anchor="middle" font-size="${fs*0.8}" fill="var(--acc)" font-weight="700" pointer-events="none" paint-order="stroke" stroke="var(--panel)" stroke-width="${fs*0.3}">${esc(it.name)} · ${Math.round(it.w)}×${Math.round(it.d)}${it.rot&&MOUNT(it.type)!=='w'?' · '+it.rot+'°':''}</text>`:'';
     const ce=o===3?`<rect x="${-it.w/2-3}" y="${-it.d/2-3}" width="${it.w+6}" height="${it.d+6}" rx="4" fill="none" stroke="var(--acc)" stroke-opacity=".5" stroke-width="${fs*0.07}" stroke-dasharray="${fs*0.35} ${fs*0.25}"/>`:'';
-    return`<g class="it" data-id="${it.id}" transform="translate(${it.x} ${it.y}) rotate(${it.rot})" ${o===3?'opacity=".85"':''}>${ce}${sym(it,tc,fs,s?'var(--acc)':bd?'#d2372b':null,s||bd?fs*0.28:fs*0.08,bd&&!s)}</g>${lbl?`<g transform="translate(${it.x} ${it.y}) rotate(${it.rot})" pointer-events="none">${lbl}</g>`:''}`}).join('');
+    return`<g class="it" data-id="${it.id}" transform="translate(${it.x} ${it.y}) rotate(${it.rot})" ${o===3?'opacity=".85"':''}>${Math.min(it.w,it.d)<30*upp?`<rect x="${-Math.max(it.w,30*upp)/2}" y="${-Math.max(it.d,30*upp)/2}" width="${Math.max(it.w,30*upp)}" height="${Math.max(it.d,30*upp)}" fill="transparent"/>`:''}${ce}${sym(it,tc,fs,s?'var(--acc)':bd?'#d2372b':null,s||bd?fs*0.28:fs*0.08,bd&&!s)}</g>${lbl?`<g transform="translate(${it.x} ${it.y}) rotate(${it.rot})" pointer-events="none">${lbl}</g>`:''}`}).join('');
   const tk=fs*0.35,seg=(ax,ay,bx,by,v)=>{if(v<1)return'';const mx=(ax+bx)/2,my=(ay+by)/2,hz=ay===by;return`<line x1="${ax}" y1="${ay}" x2="${bx}" y2="${by}"/>`+(hz?`<line x1="${ax}" y1="${ay-tk}" x2="${ax}" y2="${ay+tk}"/><line x1="${bx}" y1="${by-tk}" x2="${bx}" y2="${by+tk}"/>`:`<line x1="${ax-tk}" y1="${ay}" x2="${ax+tk}" y2="${ay}"/><line x1="${bx-tk}" y1="${by}" x2="${bx+tk}" y2="${by}"/>`)+
     `<text x="${mx}" y="${my}" dy="${hz?-fs*0.35:fs*0.3}" dx="${hz?0:fs*0.4}" text-anchor="${hz?'middle':'start'}" stroke="var(--panel)" stroke-width="${fs*0.3}" paint-order="stroke" fill="var(--acc)">${Math.round(v)}</text>`};
   let dim='',hd='';const it=cur(),cw=curW();
@@ -678,8 +679,11 @@ $('styles').addEventListener('click',e=>{const b=e.target.closest('button');if(!
   S.style=k;S.wall=s.wall;S.floor=s.floor;S.prices.floor=FLOORS[s.floor].p;S.ceil.type=s.ceil;S.prices.ceil=CEIL[s.ceil].p;S.items.forEach(i=>i.color=colorOf(CAT[i.type].k,k));drawCat();all();toast('已套用「'+s.n+'」風格')});
 function syncRoom(){const r=S.room;$('rw').value=r.w;$('rd').value=r.d;$('rh').value=r.h;$('floor').value=S.floor;$('wall').value=S.wall;$('ceil').value=S.ceil.type;$('ceilc').value=S.ceil.color;
   $('pf').value=S.prices.floor;$('pc').value=S.prices.ceil;$('pw').value=S.prices.wall;$('pp').value=S.prices.paint;$('pm').value=S.prices.misc;
+  $('wlist').innerHTML=S.walls.length?`<h2>隔間牆（${S.walls.length} 道）</h2>`+S.walls.map((w,i)=>`<div class="row" style="align-items:center;margin:4px 0"><span style="flex:2;font-size:14px">${i+1}. ${isH(w)?'水平':'垂直'} ${wlen(w)} cm</span><button data-ws="${w.id}" style="flex:1">選取</button><button data-wd="${w.id}" style="flex:1">刪除</button></div>`).join(''):'';
   const m2=r.w*r.d/1e4;$('area').textContent=`地板面積 ${m2.toFixed(1)} m²，約 ${(m2/3.3058).toFixed(1)} 坪`;drawStyles()}
 [['rw','w',150,2000],['rd','d',150,2000],['rh','h',200,400]].forEach(([id,k,lo,hi])=>$(id).addEventListener('change',e=>{commit();S.room[k]=clamp(+e.target.value||S.room[k],lo,hi);S.walls.forEach(normW);S.items.forEach(resnap);fitView();all()}));
+$('wlist').addEventListener('click',e=>{const s_=e.target.dataset.ws,d_=e.target.dataset.wd;if(s_){sel=null;selW=+s_;if(mode2==='wall')setTool('sel');if(tab!=='2d')setTab('2d');if(mq.matches)openSheet('obj');all()}
+  if(d_){selW=+d_;sel=null;act('del')}});
 $('floor').addEventListener('change',e=>{commit();S.floor=e.target.value;S.prices.floor=FLOORS[S.floor].p;all()});
 $('wall').addEventListener('change',e=>{commit();S.wall=e.target.value;all()});
 $('ceil').addEventListener('change',e=>{commit();S.ceil.type=e.target.value;S.prices.ceil=CEIL[S.ceil.type].p;all()});
