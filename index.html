@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>居家空間規劃</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
@@ -89,7 +89,43 @@ dialog textarea{width:100%;height:220px;font:13px/1.4 ui-monospace,monospace;bac
 #toast.show{opacity:1}
 @media(prefers-reduced-motion:reduce){#toast{transition:none}}
 @media(max-width:1100px){.wrap{grid-template-columns:220px minmax(0,1fr)}aside.r{grid-column:1/-1;border-left:0;border-top:1px solid var(--line);max-height:none;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:0 24px}aside.r>section h2:first-child{margin-top:18px}}
-@media(max-width:700px){.wrap{grid-template-columns:minmax(0,1fr)}.stage{order:0}aside.l{order:1;border-right:0;border-top:1px solid var(--line);max-height:none}aside.r{order:2}.tiles{grid-template-columns:repeat(3,minmax(0,1fr))}.view{min-height:64vh}.status .opt{display:none}}
+button{touch-action:manipulation}
+:root{--mb:0px}
+.mbar,.sheethd{display:none}
+@media(max-width:760px){
+:root{--mb:calc(58px + env(safe-area-inset-bottom))}
+html,body{height:100%;overflow:hidden;overscroll-behavior:none}
+header{padding:8px max(12px,env(safe-area-inset-left));gap:8px;flex-wrap:nowrap;padding-top:max(8px,env(safe-area-inset-top))}
+header p{display:none}h1{font-size:17px;white-space:nowrap}
+.tools{flex-wrap:nowrap;gap:6px}header button{min-height:36px;padding:0 10px;font-size:13px}
+.wrap{display:block;height:calc(100dvh - 53px - var(--mb) - env(safe-area-inset-top));min-height:0}
+.stage{height:100%;padding:6px;gap:6px}
+.tabs{flex-wrap:nowrap;overflow-x:auto;gap:5px;scrollbar-width:none}.tabs::-webkit-scrollbar{display:none}
+.tabs button{min-height:38px;padding:0 10px;font-size:13px;flex:none}.tabs .sep{flex:1;min-width:2px}
+.view{min-height:0;border-radius:10px}
+.float{top:6px;left:6px;right:6px;flex-wrap:nowrap;overflow-x:auto;gap:4px;scrollbar-width:none}.float::-webkit-scrollbar{display:none}
+.float button{min-height:36px;font-size:13px;padding:0 9px;flex:none}
+.status{height:30px;font-size:12px;gap:10px}#plan{height:calc(100% - 30px)}.status .opt{display:none}
+aside.l,aside.r{position:fixed;left:0;right:0;bottom:var(--mb);height:min(62dvh,560px);max-height:none;z-index:20;border:0;border-top:1px solid var(--line);border-radius:16px 16px 0 0;box-shadow:0 -10px 30px #0003;transform:translateY(110%);transition:transform .22s ease;padding:0 14px 16px;overflow:auto;display:block;grid-template-columns:none}
+aside.open{transform:none}
+aside.r section{display:none}
+aside.r[data-show=obj] .s-obj,aside.r[data-show=room] .s-room,aside.r[data-show=est] .s-est{display:block}
+aside.r section h2:first-child{margin-top:4px}
+.sheethd{display:flex;position:sticky;top:0;z-index:4;background:var(--panel);justify-content:space-between;align-items:center;padding:6px 0 8px;margin-bottom:4px}
+.sheethd::before{content:"";position:absolute;left:50%;top:4px;width:40px;height:4px;border-radius:2px;background:var(--line);transform:translateX(-50%)}
+.sheethd b{font-size:16px;margin-top:8px}.sheethd button{min-height:36px;margin-top:8px}
+.search{top:52px;padding-top:2px}
+.tiles{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.tile svg{height:50px}
+.mbar{display:flex;position:fixed;left:0;right:0;bottom:0;height:var(--mb);padding-bottom:env(safe-area-inset-bottom);background:var(--panel);border-top:1px solid var(--line);z-index:30}
+.mbar button{flex:1;border:0;border-radius:0;background:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:12px;min-height:58px;padding:0;position:relative;color:var(--mut)}
+.mbar button svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.mbar button.on{color:var(--acc);font-weight:700}
+.mbar button.dot::after{content:"";position:absolute;top:9px;left:calc(50% + 10px);width:8px;height:8px;border-radius:50%;background:var(--acc)}
+.ctl3{right:6px;bottom:6px;gap:4px}.ctl3 button{min-height:38px;min-width:40px;font-size:13px;padding:0 9px}.help3{display:none}
+#toast{bottom:calc(var(--mb) + 14px);max-width:90vw;text-align:center}
+dialog{width:94vw}
+}
+@media(max-width:760px) and (prefers-reduced-motion:reduce){aside.l,aside.r{transition:none}}
 </style>
 </head>
 <body>
@@ -102,7 +138,8 @@ dialog textarea{width:100%;height:220px;font:13px/1.4 ui-monospace,monospace;bac
   </div>
 </header>
 <div class="wrap">
-  <aside class="l">
+  <aside class="l" id="lib">
+    <div class="sheethd"><b>圖庫</b><button class="shx">完成</button></div>
     <div class="search"><input id="q" type="search" placeholder="搜尋：床、燈、窗…" aria-label="搜尋家具"></div>
     <div id="cat"></div>
   </aside>
@@ -123,9 +160,10 @@ dialog textarea{width:100%;height:220px;font:13px/1.4 ui-monospace,monospace;bac
       <div class="ctl3"><button id="m3o" class="on">鳥瞰</button><button id="m3t">俯視</button><button id="m3w">室內漫遊</button><button id="zIn" aria-label="放大／前進">＋</button><button id="zOut" aria-label="縮小／後退">－</button></div>
     </div>
   </section>
-  <aside class="r">
-    <section><h2>選取的物件</h2><div id="props"></div></section>
-    <section>
+  <aside class="r" id="insp" data-show="obj">
+    <div class="sheethd"><b id="rTitle">物件</b><button class="shx">完成</button></div>
+    <section class="s-obj"><h2>選取的物件</h2><div id="props"></div></section>
+    <section class="s-room">
       <h2>房間</h2>
       <div class="row">
         <label>寬 cm<input id="rw" type="number" min="150" max="2000" step="10"></label>
@@ -138,12 +176,12 @@ dialog textarea{width:100%;height:220px;font:13px/1.4 ui-monospace,monospace;bac
       <label class="f">天花板<select id="ceil"><option value="flat">平頂天花</option><option value="cove">間接照明天花</option><option value="none">不做天花（原樓板）</option></select></label>
       <label class="f">天花色<input id="ceilc" type="color"></label>
     </section>
-    <section>
+    <section class="s-room">
       <h2>風格（套用會改牆色、地板、天花與家具配色）</h2>
       <div class="styles" id="styles"></div>
       <p class="tip" id="stip"></p>
     </section>
-    <section>
+    <section class="s-est">
       <h2>估價</h2>
       <div id="est"></div>
       <div class="unit">
@@ -163,6 +201,12 @@ dialog textarea{width:100%;height:220px;font:13px/1.4 ui-monospace,monospace;bac
   <textarea id="io"></textarea>
   <div class="row" style="margin-top:10px"><button id="ioCopy">複製</button><button id="ioLoad">載入</button><button id="ioClose">關閉</button></div>
 </dialog>
+<nav class="mbar" aria-label="手機選單">
+  <button data-sh="lib"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>圖庫</button>
+  <button data-sh="obj" id="mbObj"><svg viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13 7l4 4"/></svg>物件</button>
+  <button data-sh="room"><svg viewBox="0 0 24 24"><path d="M3 10l9-7 9 7v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M9 21v-6h6v6"/></svg>房間</button>
+  <button data-sh="est"><svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/></svg>估價</button>
+</nav>
 <div id="toast" role="status"></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
@@ -232,6 +276,7 @@ const STYLES={
 };
 const colorOf=(k,st)=>(STYLES[st]||STYLES.nordic)[k]||FIX[k]||'#cccccc';
 const KEY='room-planner-v1',$=id=>document.getElementById(id);
+const mq=matchMedia('(max-width:760px)'),coarse=matchMedia('(pointer:coarse)');
 let S,sel=null,selW=null,mode2='sel',wuid=1,tab='2d',hist=[],uid=1,showC=true,showD=true,vz=1,vcx=0,vcy=0;
 function mk(type,x,y,rot,st){const c=CAT[type];return{id:uid++,type,name:c.n,x,y,w:c.w,d:c.d,h:c.h,rot:rot||0,color:colorOf(c.k,st||(S&&S.style)||'nordic'),price:c.p,elev:c.e||0}}
 function sample(){uid=1;wuid=1;const st='nordic',m=(t,x,y,r)=>mk(t,x,y,r,st);return{room:{w:600,d:450,h:270},style:st,floor:'oak',wall:STYLES[st].wall,ceil:{type:'cove',color:'#fafaf8'},prices:{floor:3800,ceil:5200,wall:3000,paint:900,misc:10},walls:[],items:[
@@ -349,9 +394,14 @@ function drawCat(){const q=$('q').value.trim();const open=new Set([...document.q
     const op=q||(first?['living','bed','light','open'].includes(g):open.has(g));
     return`<details class="grp" data-g="${g}" ${op?'open':''}><summary>${gn}<small>${ks.length+(wt?1:0)} 項</small></summary><div class="tiles">${wt?wallTile:''}${ks.map(k=>`<button class="tile" data-k="${k}" title="${CAT[k].n}：拖曳到平面圖或點一下加入">${thumb(k)}<b>${CAT[k].n}</b><small>${CAT[k].w}×${CAT[k].d}${MOUNT(k)==='c'?' · 天花':MOUNT(k)==='w'?' · 壁掛':''}</small></button>`).join('')}</div></details>`}).join('')||'<p class="empty">找不到符合的家具</p>'}
 $('q').addEventListener('input',drawCat);
-function addItem(k,px,py){commit();const it=mk(k,Math.round(px/5)*5,Math.round(py/5)*5,0,S.style);if(MOUNT(k)==='w')snapWall(it,px,py);S.items.push(it);sel=it.id;all();toast('已加入「'+it.name+'」'+(MOUNT(k)==='w'?'，會自動貼齊最近的牆':''))}
+function addItem(k,px,py){commit();const it=mk(k,Math.round(px/5)*5,Math.round(py/5)*5,0,S.style);if(MOUNT(k)==='w')snapWall(it,px,py);S.items.push(it);sel=it.id;selW=null;if(mq.matches)openSheet(null);all();toast('已加入「'+it.name+'」'+(MOUNT(k)==='w'?'，會自動貼齊最近的牆':''))}
 let pd=null;
-$('cat').addEventListener('pointerdown',e=>{const t=e.target.closest('.tile');if(!t||e.button>0)return;if(e.pointerType==='mouse')e.preventDefault();if(t.dataset.tool){setTool('wall');toast('畫牆模式：在平面圖上拖曳即可畫牆');return}pd={k:t.dataset.k,x:e.clientX,y:e.clientY,g:null,t}});
+let lastPT='mouse';
+$('cat').addEventListener('click',e=>{const t=e.target.closest('.tile');if(!t||lastPT==='mouse')return;
+  if(t.dataset.tool){if(mq.matches)openSheet(null);setTool('wall');toast('畫牆模式：在平面圖上拖曳即可畫牆');return}
+  if(tab!=='2d')setTab('2d');addItem(t.dataset.k,S.room.w/2,S.room.d/2)});
+$('cat').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' ')lastPT='key'},true);
+$('cat').addEventListener('pointerdown',e=>{const t=e.target.closest('.tile');lastPT=e.pointerType||'mouse';if(!t||e.button>0||lastPT!=='mouse')return;if(e.pointerType==='mouse')e.preventDefault();if(t.dataset.tool){if(mq.matches)openSheet(null);setTool('wall');toast('畫牆模式：在平面圖上拖曳即可畫牆');return}pd={k:t.dataset.k,x:e.clientX,y:e.clientY,g:null,t}});
 window.addEventListener('pointermove',e=>{if(!pd)return;if(!pd.g&&Math.hypot(e.clientX-pd.x,e.clientY-pd.y)>6){if(tab!=='2d')setTab('2d');pd.g=document.createElement('div');pd.g.className='ghost';pd.g.innerHTML=thumb(pd.k);document.body.appendChild(pd.g)}
   if(pd.g){pd.g.style.left=e.clientX+'px';pd.g.style.top=e.clientY+'px'}});
 window.addEventListener('pointerup',e=>{if(!pd)return;const p=pd;pd=null;if(p.g){p.g.remove();const r=svg.getBoundingClientRect();if(e.clientX>r.left&&e.clientX<r.right&&e.clientY>r.top&&e.clientY<r.bottom){const q=pt(e);addItem(p.k,q.x,q.y)}}
@@ -361,9 +411,9 @@ window.addEventListener('pointercancel',()=>{if(pd&&pd.g)pd.g.remove();pd=null})
 /* ================= 2D plan ================= */
 const svg=$('plan');
 function fitView(){vz=1;vcx=S.room.w/2;vcy=S.room.d/2}
-function draw2d(){const W=S.room.w,D=S.room.d,base=Math.max(W,D),fs=base/36/Math.sqrt(vz),m=base/11,bad=problems(),fl=FLOORS[S.floor].c,bw=(W+2*m)/vz,bh=(D+2*m)/vz,H=S.room.h;
+function draw2d(){const W=S.room.w,D=S.room.d,base=Math.max(W,D),m=base/(mq.matches?16:11),bw0=(W+2*m)/vz,bh0=(D+2*m)/vz,upp0=Math.max(bw0/(svg.clientWidth||800),bh0/(svg.clientHeight||500)),fs=Math.max(base/36/Math.sqrt(vz),15*upp0),bad=problems(),fl=FLOORS[S.floor].c,bw=(W+2*m)/vz,bh=(D+2*m)/vz,H=S.room.h;
   svg.setAttribute('viewBox',`${vcx-bw/2} ${vcy-bh/2} ${bw} ${bh}`);
-  const upp=Math.max(bw/(svg.clientWidth||800),bh/(svg.clientHeight||500)),hs=Math.max(fs*0.4,11*upp),hit=Math.max(hs,26*upp);
+  const upp=Math.max(bw/(svg.clientWidth||800),bh/(svg.clientHeight||500)),hs=Math.max(fs*0.4,(coarse.matches?15:11)*upp),hit=Math.max(hs,(coarse.matches?40:26)*upp);
   /* partition walls */
   const walls=S.walls.map(w=>{const r=wrect(w),hz=isH(w),s=w.id===selW,hh=w.h||H,half=w.h&&w.h<H;
     const ps=wallPieces(w,H).filter(p=>p[2]===0&&p[3]>=hh).map(([a,b])=>hz?`<rect x="${a}" y="${r.y1}" width="${b-a}" height="${r.y2-r.y1}"/>`:`<rect x="${r.x1}" y="${a}" width="${r.x2-r.x1}" height="${b-a}"/>`).join('');
@@ -447,7 +497,7 @@ $('lyC').onclick=()=>{showC=!showC;$('lyC').classList.toggle('on',showC);draw2d(
 $('lyD').onclick=()=>{showD=!showD;$('lyD').classList.toggle('on',showD);draw2d()};
 
 /* ================= inspector ================= */
-function props(){const it=cur(),w=curW(),el=$('props');status();
+function props(){const it=cur(),w=curW(),el=$('props');status();$('mbObj').classList.toggle('dot',!!(it||w));
   if(w){el.innerHTML=`<p style="margin:0 0 6px"><span class="badge">隔間牆</span><span class="badge">${isH(w)?'水平':'垂直'}</span></p>
    <div class="row"><label>長度 cm<input data-wp="len" type="number" min="20" step="5" value="${wlen(w)}"></label><label>厚度 cm<input data-wp="t" type="number" min="4" max="60" value="${w.t}"></label><label>高度 cm<input data-wp="h" type="number" min="20" value="${w.h||S.room.h}"></label></div>
    <div class="row"><label>起點 X cm<input data-wp="x1" type="number" step="5" value="${w.x1}"></label><label>起點 Y cm<input data-wp="y1" type="number" step="5" value="${w.y1}"></label></div>
@@ -751,6 +801,28 @@ function build3d(){if(!init3d())return;const{g,cg,dl}=R,W=S.room.w,D=S.room.d,H=
   cam3()}
 function setTab(t){tab=t;$('t2').classList.toggle('on',t==='2d');$('t3').classList.toggle('on',t==='3d');$('vw2').hidden=t!=='2d';$('vw3').hidden=t!=='3d';if(t==='3d'){build3d();modeBtns();need=true}}
 $('t2').onclick=()=>setTab('2d');$('t3').onclick=()=>setTab('3d');
+
+/* ================= mobile ================= */
+let sheet=null;
+function openSheet(k){sheet=k;$('lib').classList.toggle('open',k==='lib');$('insp').classList.toggle('open',['obj','room','est'].includes(k));
+  if(k&&k!=='lib'){$('insp').dataset.show=k;$('rTitle').textContent={obj:'物件',room:'房間與風格',est:'估價'}[k];$('insp').scrollTop=0}
+  document.querySelectorAll('.mbar button').forEach(b=>b.classList.toggle('on',b.dataset.sh===k))}
+document.querySelectorAll('.mbar button').forEach(b=>b.onclick=()=>openSheet(sheet===b.dataset.sh?null:b.dataset.sh));
+document.querySelectorAll('.shx').forEach(b=>b.onclick=()=>openSheet(null));
+mq.addEventListener('change',()=>{openSheet(null);draw2d()});
+window.addEventListener('resize',()=>{if(tab==='2d')draw2d()});
+/* two-finger pinch / pan on the plan */
+const tp=new Map();let pinch=null;
+function sv(){const r=svg.getBoundingClientRect(),m=Math.max(S.room.w,S.room.d)/(mq.matches?16:11),bw=(S.room.w+2*m)/vz,bh=(S.room.d+2*m)/vz;return{r,s:Math.min(r.width/bw,r.height/bh)}}
+svg.addEventListener('pointerdown',e=>{if(e.pointerType!=='touch')return;tp.set(e.pointerId,[e.clientX,e.clientY]);
+  if(tp.size===2){if(drag&&!drag.pan&&!drag.nw){if(drag.moved)S=JSON.parse(hist.pop());else hist.pop()}drag=null;
+    const[a,b]=[...tp.values()],mx=(a[0]+b[0])/2,my=(a[1]+b[1])/2,p=svg.createSVGPoint();p.x=mx;p.y=my;const q=p.matrixTransform(svg.getScreenCTM().inverse());
+    pinch={d:Math.hypot(a[0]-b[0],a[1]-b[1])||1,vz0:vz,px:q.x,py:q.y};e.stopImmediatePropagation()}},true);
+svg.addEventListener('pointermove',e=>{if(!tp.has(e.pointerId))return;tp.set(e.pointerId,[e.clientX,e.clientY]);if(!pinch||tp.size<2)return;e.stopImmediatePropagation();
+  const[a,b]=[...tp.values()],mx=(a[0]+b[0])/2,my=(a[1]+b[1])/2;vz=clamp(pinch.vz0*Math.hypot(a[0]-b[0],a[1]-b[1])/pinch.d,0.4,8);
+  const{r,s}=sv();vcx=pinch.px-(mx-r.left-r.width/2)/s;vcy=pinch.py-(my-r.top-r.height/2)/s;draw2d()},true);
+const tEnd=e=>{if(!tp.has(e.pointerId))return;tp.delete(e.pointerId);if(pinch){e.stopImmediatePropagation();if(tp.size<2){pinch=null;drag=null;all()}}};
+svg.addEventListener('pointerup',tEnd,true);svg.addEventListener('pointercancel',e=>{tEnd(e);if(drag){if(drag.moved&&!drag.pan&&!drag.nw)S=JSON.parse(hist.pop());drag=null;all()}},true);
 
 /* ================= misc ================= */
 function all(){draw2d();props();syncRoom();est();save();if(tab==='3d')build3d()}
