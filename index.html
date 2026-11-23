@@ -409,6 +409,9 @@ function snapPt(p,ex){const W=S.room.w,D=S.room.d,g=14/Math.sqrt(vz);let x=Math.
   S.walls.forEach(w=>{if(w.id===ex)return;xs.push(w.x1,w.x2);ys.push(w.y1,w.y2)});
   let bx=g,by=g;for(const v of xs)if(Math.abs(p.x-v)<bx){bx=Math.abs(p.x-v);x=v}for(const v of ys)if(Math.abs(p.y-v)<by){by=Math.abs(p.y-v);y=v}
   return{x:clamp(x,0,W),y:clamp(y,0,D)}}
+function perpGaps(g,ex){const t=(g.t||12)/2,hz=g.y1===g.y2,W=S.room.w,D=S.room.d;
+  if(hz){const m=(g.x1+g.x2)/2,y=g.y1;let a=0,b=D;S.walls.forEach(w=>{if(w.id===ex||!isH(w))return;const r=wrect(w);if(r.x1<=m&&m<=r.x2){if(w.y1<y)a=Math.max(a,r.y2);else if(w.y1>y)b=Math.min(b,r.y1)}});return{hz,m,a,b,f1:y-t,f2:y+t}}
+  const m=(g.y1+g.y2)/2,x=g.x1;let a=0,b=W;S.walls.forEach(w=>{if(w.id===ex||isH(w))return;const r=wrect(w);if(r.y1<=m&&m<=r.y2){if(w.x1<x)a=Math.max(a,r.x2);else if(w.x1>x)b=Math.min(b,r.x1)}});return{hz,m,a,b,f1:x-t,f2:x+t}}
 /* auto partition wall for doors/windows dropped mid-room */
 function wallDist(px,py){let d=Math.min(px,py,S.room.w-px,S.room.d-py);S.walls.forEach(w=>{const r=wrect(w);if(isH(w)){if(px>=r.x1-5&&px<=r.x2+5)d=Math.min(d,Math.abs(py-w.y1))}else if(py>=r.y1-5&&py<=r.y2+5)d=Math.min(d,Math.abs(px-w.x1))});return d}
 function autoSeg(it,px,py){if(!isOpen(it.type)||wallDist(px,py)<=50)return null;const W=S.room.w,D=S.room.d,sn=v=>Math.round(v/5)*5,x=sn(px),y=sn(py),C=[];
@@ -564,6 +567,7 @@ function draw2d(){const W=S.room.w,D=S.room.d,base=Math.max(W,D),m=base/(mq.matc
     return`<g class="it" data-id="${it.id}" transform="translate(${it.x} ${it.y}) rotate(${it.rot})" ${o===3?'opacity=".85"':''}>${Math.min(it.w,it.d)<30*upp?`<rect x="${-Math.max(it.w,30*upp)/2}" y="${-Math.max(it.d,30*upp)/2}" width="${Math.max(it.w,30*upp)}" height="${Math.max(it.d,30*upp)}" fill="transparent"/>`:''}${ce}${sym(it,tc,fs,s?'var(--acc)':bd?'#d2372b':null,s||bd?fs*0.28:fs*0.08,bd&&!s)}</g>${lbl?`<g class="selx" transform="translate(${it.x} ${it.y}) rotate(${it.rot})" pointer-events="none">${lbl}</g>`:''}`}).join('');
   const tk=fs*0.35,seg=(ax,ay,bx,by,v)=>{if(v<1)return'';const mx=(ax+bx)/2,my=(ay+by)/2,hz=ay===by;return`<line x1="${ax}" y1="${ay}" x2="${bx}" y2="${by}"/>`+(hz?`<line x1="${ax}" y1="${ay-tk}" x2="${ax}" y2="${ay+tk}"/><line x1="${bx}" y1="${by-tk}" x2="${bx}" y2="${by+tk}"/>`:`<line x1="${ax-tk}" y1="${ay}" x2="${ax+tk}" y2="${ay}"/><line x1="${bx-tk}" y1="${by}" x2="${bx+tk}" y2="${by}"/>`)+
     `<text x="${mx}" y="${my}" dy="${hz?-fs*0.35:fs*0.3}" dx="${hz?0:fs*0.4}" text-anchor="${hz?'middle':'start'}" stroke="var(--panel)" stroke-width="${fs*0.3}" paint-order="stroke" fill="var(--acc)">${Math.round(v)}</text>`};
+  const pdim=(g,ex)=>{const q=perpGaps(g,ex),m=q.m+fs*1.6;return`<g stroke="var(--acc)" stroke-width="${fs*0.07}" font-size="${fs*0.8}" font-weight="700">`+(q.hz?seg(m,q.a,m,q.f1,q.f1-q.a)+seg(m,q.f2,m,q.b,q.b-q.f2):seg(q.a,m,q.f1,m,q.f1-q.a)+seg(q.f2,m,q.b,m,q.b-q.f2))+'</g>'};
   let dim='',hd='';const it=cur(),cw=curW();
   if(it&&showD){const f=fp(it),x1=it.x-f.w/2,x2=it.x+f.w/2,y1=it.y-f.d/2,y2=it.y+f.d/2,vr=S.walls.filter(w=>!isH(w)).map(wrect),hr=S.walls.filter(isH).map(wrect);
     const L=Math.max(0,...vr.filter(r=>r.x2<=x1+0.5&&r.y1<=it.y&&it.y<=r.y2).map(r=>r.x2)),Rt=Math.min(W,...vr.filter(r=>r.x1>=x2-0.5&&r.y1<=it.y&&it.y<=r.y2).map(r=>r.x1)),
@@ -577,11 +581,11 @@ function draw2d(){const W=S.room.w,D=S.room.d,base=Math.max(W,D),m=base/(mq.matc
   if(cw){const hz=isH(cw),r=wrect(cw),mx=(cw.x1+cw.x2)/2,my=(cw.y1+cw.y2)/2,o=cw.t/2+fs*0.9;
     hd+=[1,2].map(k=>`<circle class="hd" data-e="${k}" cx="${cw['x'+k]}" cy="${cw['y'+k]}" r="${hit/2}" fill="transparent"/><circle cx="${cw['x'+k]}" cy="${cw['y'+k]}" r="${hs*0.6}" fill="#fff" stroke="var(--acc)" stroke-width="${fs*0.12}" pointer-events="none"/>`).join('')+
       `<text ${hz?`x="${mx}" y="${my-o}" text-anchor="middle"`:`transform="translate(${mx+o} ${my}) rotate(90)" text-anchor="middle"`} font-size="${fs*0.8}" font-weight="700" fill="var(--acc)" stroke="var(--panel)" stroke-width="${fs*0.3}" paint-order="stroke" pointer-events="none">${wlen(cw)} cm</text>`;
-    if(showD){const sg=hz?`${seg(0,my,r.x1,my,r.x1)}${seg(r.x2,my,W,my,W-r.x2)}`:`${seg(mx,0,mx,r.y1,r.y1)}${seg(mx,r.y2,mx,D,D-r.y2)}`;dim+=`<g stroke="var(--acc)" stroke-width="${fs*0.06}" font-size="${fs*0.72}" stroke-opacity=".6">${sg}</g>`}}
+    if(showD){dim+=pdim(cw,cw.id);const sg=hz?`${seg(0,my,r.x1,my,r.x1)}${seg(r.x2,my,W,my,W-r.x2)}`:`${seg(mx,0,mx,r.y1,r.y1)}${seg(mx,r.y2,mx,D,D-r.y2)}`;dim+=`<g stroke="var(--acc)" stroke-width="${fs*0.06}" font-size="${fs*0.72}" stroke-opacity=".6">${sg}</g>`}}
   let pre='';if(drag&&drag.pv){const g=drag.pv,hz=g.y1===g.y2;pre=`<g pointer-events="none"><line x1="${g.x1}" y1="${g.y1}" x2="${g.x2}" y2="${g.y2}" stroke="var(--acc)" stroke-opacity=".6" stroke-width="12" stroke-dasharray="20 12"/><text x="${(g.x1+g.x2)/2+(hz?0:fs*1.2)}" y="${(g.y1+g.y2)/2-(hz?fs*1.1:0)}" text-anchor="middle" font-size="${fs*0.85}" font-weight="700" fill="var(--acc)" stroke="var(--panel)" stroke-width="${fs*0.3}" paint-order="stroke">放開會在這裡建牆 · ${g.L} cm</text></g>`}
   if(drag&&drag.nw){const L=Math.abs(drag.x1-drag.x0)+Math.abs(drag.y1-drag.y0),hz=drag.y1===drag.y0;
     pre=`<g pointer-events="none"><line x1="${drag.x0}" y1="${drag.y0}" x2="${drag.x1}" y2="${drag.y1}" stroke="var(--acc)" stroke-opacity=".55" stroke-width="12" stroke-linecap="square"/><circle cx="${drag.x0}" cy="${drag.y0}" r="${hs*0.5}" fill="var(--acc)"/>`+
-      (L?`<text x="${(drag.x0+drag.x1)/2+(hz?0:fs*1.2)}" y="${(drag.y0+drag.y1)/2-(hz?fs*1.2:0)}" text-anchor="middle" font-size="${fs*0.9}" font-weight="700" fill="var(--acc)" stroke="var(--panel)" stroke-width="${fs*0.3}" paint-order="stroke">${L} cm</text>`:'')+'</g>'}
+      (L>=20?pdim({x1:Math.min(drag.x0,drag.x1),x2:Math.max(drag.x0,drag.x1),y1:Math.min(drag.y0,drag.y1),y2:Math.max(drag.y0,drag.y1),t:12},-1):'')+(L?`<text x="${(drag.x0+drag.x1)/2+(hz?0:fs*1.2)}" y="${(drag.y0+drag.y1)/2-(hz?fs*1.2:0)}" text-anchor="middle" font-size="${fs*0.9}" font-weight="700" fill="var(--acc)" stroke="var(--panel)" stroke-width="${fs*0.3}" paint-order="stroke">${L} cm</text>`:'')+'</g>'}
   svg.innerHTML=`<defs><pattern id="gp" width="50" height="50" patternUnits="userSpaceOnUse"><path d="M50 0H0V50" fill="none" stroke="var(--grid)" stroke-width="${fs*0.05}"/></pattern><pattern id="gp2" width="100" height="100" patternUnits="userSpaceOnUse"><path d="M100 0H0V100" fill="none" stroke="var(--grid2)" stroke-width="${fs*0.06}"/></pattern></defs>
     <rect x="0" y="0" width="${W}" height="${D}" fill="${fl}" fill-opacity=".3"/><rect x="0" y="0" width="${W}" height="${D}" fill="url(#gp)"/><rect x="0" y="0" width="${W}" height="${D}" fill="url(#gp2)"/>
     <rect x="-6" y="-6" width="${W+12}" height="${D+12}" fill="none" stroke="var(--ink)" stroke-width="12"/>
@@ -664,6 +668,7 @@ $('lyD').onclick=()=>{showD=!showD;$('lyD').classList.toggle('on',showD);draw2d(
 function props(){const it=cur(),w=curW(),el=$('props');status();$('mbObj').classList.toggle('dot',!!(it||w));
   if(w){el.innerHTML=`<p style="margin:0 0 6px"><span class="badge">隔間牆</span><span class="badge">${isH(w)?'水平':'垂直'}</span></p>
    <div class="row"><label>長度 cm<input data-wp="len" type="number" min="20" step="5" value="${wlen(w)}"></label><label>厚度 cm<input data-wp="t" type="number" min="4" max="60" value="${w.t}"></label><label>高度 cm<input data-wp="h" type="number" min="20" value="${w.h||S.room.h}"></label></div>
+   ${(()=>{const q=perpGaps(w,w.id),lb=isH(w)?['離上方','離下方']:['離左方','離右方'];return`<div class="row"><label>${lb[0]} cm<input data-wp="ga" type="number" min="0" step="5" value="${Math.round(q.f1-q.a)}"></label><label>${lb[1]} cm<input data-wp="gb" type="number" min="0" step="5" value="${Math.round(q.b-q.f2)}"></label></div>`})()}
    <div class="row"><label>起點 X cm<input data-wp="x1" type="number" step="5" value="${w.x1}"></label><label>起點 Y cm<input data-wp="y1" type="number" step="5" value="${w.y1}"></label></div>
    <p class="tip">拖牆身移動、拖兩端圓點改長度、↻ 轉成垂直／水平。把門或窗拖到牆上會自動開洞；高度小於天花高就是矮牆。</p>`;return}
   if(!it){el.innerHTML=`<div class="empty">在平面圖上點選物件或牆，即可調整尺寸、方向、顏色與價格。按「畫牆」可以新增隔間牆。</div>`;return}
@@ -687,6 +692,7 @@ $('props').addEventListener('change',e=>{if(e.target.id==='rotR'){rangeEd=false;
   if(wp&&w){commit();const v=+e.target.value||0,W=S.room.w,D=S.room.d;
     if(wp==='len'){const L=Math.max(20,v);if(isH(w))w.x2=Math.min(W,w.x1+L);else w.y2=Math.min(D,w.y1+L)}
     if(wp==='t')w.t=clamp(v,4,60);if(wp==='h')w.h=v>=S.room.h||v<=0?0:Math.max(20,v);
+    if(wp==='ga'||wp==='gb'){const q=perpGaps(w,w.id),k=isH(w)?'y':'x',cen=wp==='ga'?q.a+Math.max(0,v)+w.t/2:q.b-Math.max(0,v)-w.t/2,lim=k==='x'?W:D,dd=clamp(cen,0,lim)-w[k+'1'];w[k+'1']+=dd;w[k+'2']+=dd;S.items.forEach(i=>{if(i.wid===w.id)i[k]+=dd})}
     if(wp==='x1'||wp==='y1'){const k=wp[0],lim=k==='x'?W-(w.x2-w.x1):D-(w.y2-w.y1),dd=clamp(v,0,lim)-w[k+'1'];w[k+'1']+=dd;w[k+'2']+=dd;S.items.forEach(i=>{if(i.wid===w.id)i[k]+=dd})}
     normW(w);S.items.filter(i=>i.wid===w.id).forEach(resnap);all();return}
   const p=e.target.dataset.p,it=cur();if(!p||!it)return;commit();let v=p==='cur'?e.target.checked:e.target.value;
