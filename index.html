@@ -454,7 +454,8 @@ function sym(it,tc,fs,sc,sw,dash){const{w,d,color:c}=it,L=-w/2,T=-d/2,k=CAT[it.t
   case'down':o+=Ci(0,0,w/2,`fill="#fff" stroke="${tc}" stroke-width="${fs*0.1}"`)+Ln(-w/2,0,w/2,0)+Ln(0,-w/2,0,w/2);break;
   case'fan':{let s='';for(let i=0;i<5;i++)s+=`<ellipse cx="0" cy="${-w*0.28}" rx="${w*0.07}" ry="${w*0.21}" fill="${c}" fill-opacity=".9" transform="rotate(${i*72})"/>`;o+=s+Ci(0,0,w*0.11,`fill="${dk}"`);break}
   case'ac':for(let i=1;i<4;i++)o+=Ln(L+4,T+i*d/4,w/2-4,T+i*d/4);break;
-  case'door':o+=Ln(L,d/2,L,d/2+w,`stroke="${tc}" stroke-opacity=".7" stroke-width="${fs*0.14}"`)+`<path d="M${L} ${d/2+w}A${w} ${w} 0 0 0 ${w/2} ${d/2}" fill="none" stroke="${tc}" stroke-opacity=".45" stroke-width="${fs*0.08}" stroke-dasharray="${fs*0.35} ${fs*0.25}"/>`;break;
+  case'door':{const hx=it.hinge==='R'?w/2:L,ox=it.hinge==='R'?L:w/2,sy=it.out?-1:1,sw2=(it.hinge==='R')!==!!it.out?1:0;
+    o+=Ln(hx,sy*d/2,hx,sy*(d/2+w),`stroke="${tc}" stroke-opacity=".7" stroke-width="${fs*0.14}"`)+`<path d="M${hx} ${sy*(d/2+w)}A${w} ${w} 0 0 ${sw2} ${ox} ${sy*d/2}" fill="none" stroke="${tc}" stroke-opacity=".45" stroke-width="${fs*0.08}" stroke-dasharray="${fs*0.35} ${fs*0.25}"/>`;break}
   case'window':o+=Ln(L,0,w/2,0)+Ln(L,-d/4,w/2,-d/4)+Ln(L,d/4,w/2,d/4);break;
   case'art':o+=R(L+1,T+0.8,w-2,d-1.6,'fill="#c56b4c"',0);break;
   case'mirror':o+=R(L+1,T+0.8,w-2,d-1.6,'fill="#d7e4ea"',0);break;
@@ -487,8 +488,8 @@ function sym(it,tc,fs,sc,sw,dash){const{w,d,color:c}=it,L=-w/2,T=-d/2,k=CAT[it.t
   case'chandelier':o+=Ci(0,0,w*0.4,`fill="none" stroke="${c}" stroke-width="${fs*0.15}"`)+Array.from({length:8},(_,i)=>Ci(Math.sin(i*0.785)*w*0.38,Math.cos(i*0.785)*w*0.38,3,'fill="#fff2d6" stroke="#999"')).join('')+Ci(0,0,6,`fill="${c}"`);break;
   case'sconce':o+=`<path d="M${L} ${T}A${w/2} ${d} 0 0 0 ${w/2} ${T}" fill="#f3eee2" stroke="${tc}" stroke-opacity=".4"/>`;break;
   case'arclamp':o+=Ci(0,T+20,18,'fill="#ecebe7" stroke="#999"')+`<path d="M0 ${T+20}Q0 0 0 ${d/2-20}" stroke="${c}" stroke-width="${fs*0.15}" fill="none" stroke-dasharray="${fs*0.4} ${fs*0.2}"/>`+Ci(0,d/2-20,18,`fill="${c}" fill-opacity=".85"`)+Ci(0,d/2-20,5,'fill="#fff2d6"');break;
-  case'door2':{const lw=w/2;o+=Ln(L,d/2,L,d/2+lw,`stroke="${tc}" stroke-opacity=".7" stroke-width="${fs*0.14}"`)+Ln(w/2,d/2,w/2,d/2+lw,`stroke="${tc}" stroke-opacity=".7" stroke-width="${fs*0.14}"`)+
-    `<path d="M${L} ${d/2+lw}A${lw} ${lw} 0 0 0 0 ${d/2}M${w/2} ${d/2+lw}A${lw} ${lw} 0 0 1 0 ${d/2}" fill="none" stroke="${tc}" stroke-opacity=".45" stroke-width="${fs*0.08}" stroke-dasharray="${fs*0.35} ${fs*0.25}"/>`;break}
+  case'door2':{const lw=w/2,sy=it.out?-1:1,f=it.out?1:0;o+=Ln(L,sy*d/2,L,sy*(d/2+lw),`stroke="${tc}" stroke-opacity=".7" stroke-width="${fs*0.14}"`)+Ln(w/2,sy*d/2,w/2,sy*(d/2+lw),`stroke="${tc}" stroke-opacity=".7" stroke-width="${fs*0.14}"`)+
+    `<path d="M${L} ${sy*(d/2+lw)}A${lw} ${lw} 0 0 ${f} 0 ${sy*d/2}M${w/2} ${sy*(d/2+lw)}A${lw} ${lw} 0 0 ${1-f} 0 ${sy*d/2}" fill="none" stroke="${tc}" stroke-opacity=".45" stroke-width="${fs*0.08}" stroke-dasharray="${fs*0.35} ${fs*0.25}"/>`;break}
   case'slide':o+=R(L,T-1,w/2+4,d/2+1,F(0.35),0)+R(-4,0,w/2+4,d/2+1,F(0.2),0)+`<path d="M${-w*0.3} ${d/2+fs*0.9}h${w*0.2}m-${fs*0.5} -${fs*0.4}l${fs*0.5} ${fs*0.4}l-${fs*0.5} ${fs*0.4}" fill="none" stroke="${tc}" stroke-opacity=".5" stroke-width="${fs*0.08}"/>`;break;
   case'balcony':{const n=w>=280?4:2,pw=w/n;o+=R(L,T,w,d,'fill="#e9eef1"',0);for(let i=0;i<n;i++)o+=R(L+pw*i,(i===0||i===n-1)?T:0,pw+(i<n-1?3:0),d/2,`fill="#9fc3d3" stroke="${tc}" stroke-opacity=".4" stroke-width="${fs*0.06}"`,0);
     o+=`<path d="M${-w*0.25} ${d/2+fs*0.9}h${w*0.18}m-${fs*0.5} -${fs*0.4}l${fs*0.5} ${fs*0.4}l-${fs*0.5} ${fs*0.4}M${w*0.25} ${d/2+fs*0.9}h-${w*0.18}m${fs*0.5} -${fs*0.4}l-${fs*0.5} ${fs*0.4}l${fs*0.5} ${fs*0.4}" fill="none" stroke="${tc}" stroke-opacity=".55" stroke-width="${fs*0.09}"/>`;break}
@@ -587,12 +588,14 @@ const ROUNDS=new Set(['roundt','rugR','stool','lamp','pendant','ceilLight','down
 let drag=null;
 svg.addEventListener('pointerdown',e=>{if(e.button>0)return;svg.setPointerCapture(e.pointerId);const p=pt(e);
   if(mode2==='wall'){const q=snapPt(p);selW=null;drag={nw:true,x0:q.x,y0:q.y,x1:q.x,y1:q.y};draw2d();return}
-  const h=e.target.closest('.hd');
+  const h=e.target.closest('.hd'),g0=e.target.closest('.it'),tid=g0?+g0.dataset.id:(h&&sel!=null?sel:null),now=Date.now(),ti=tid!=null&&S.items.find(i=>i.id===tid);
+  if(ti&&['door','door2'].includes(CAT[ti.type].s)&&lastTap.id===tid&&now-lastTap.t<450){lastTap={};sel=tid;selW=null;flipDoor(ti,'cycle');toast(CAT[ti.type].s==='door'?`開門方向：鉸鏈${ti.hinge==='R'?'右':'左'}・${ti.out?'向外':'向內'}開`:`開門方向：${ti.out?'向外':'向內'}開`);return}
+  lastTap={id:tid,t:now};
   if(h&&h.dataset.r&&cur()){commit();drag={ro:true,moved:false};return}
   if(h&&h.dataset.e&&curW()){commit();drag={we:+h.dataset.e,moved:false};return}
   if(h&&h.dataset.h&&cur()){const it=cur(),[sx,sy]=h.dataset.h.split(',').map(Number);commit();drag={rs:true,sx,sy,cx:it.x,cy:it.y,w0:it.w,d0:it.d,moved:false};return}
   const g=e.target.closest('.it');
-  if(g){sel=+g.dataset.id;selW=null;const it=cur();commit();drag={dx:p.x-it.x,dy:p.y-it.y,moved:false};draw2d();props();return}
+  if(g){const gid=+g.dataset.id;sel=gid;selW=null;const it=cur();commit();drag={dx:p.x-it.x,dy:p.y-it.y,moved:false};draw2d();props();return}
   const wl=e.target.closest('.wl');
   if(wl){selW=+wl.dataset.w;sel=null;const w=curW();commit();drag={wm:true,dx:p.x-w.x1,dy:p.y-w.y1,moved:false};draw2d();props();return}
   drag={pan:true,sx:e.clientX,sy:e.clientY,cx:vcx,cy:vcy,moved:false}});
@@ -622,6 +625,7 @@ svg.addEventListener('pointerup',e=>{if(!drag)return;svg.classList.remove('pan')
     if(wlen(w)>=20){commit();normW(w);S.walls.push(w);selW=w.id;sel=null;all();toast(`已新增 ${wlen(w)} cm 的牆，可繼續畫或按 Esc 結束`)}else draw2d();return}
   if(dg.we||dg.wm){if(!dg.moved){hist.pop();all();return}const w=curW();normW(w);if(wlen(w)<20){S=JSON.parse(hist.pop());toast('牆太短了，至少 20 cm')}else S.items.filter(i=>i.wid===w.id).forEach(resnap);all();return}
   if(!dg.moved)hist.pop();const it=cur();if(dg.rs&&it)resnap(it);all()});
+let lastTap={};
 svg.addEventListener('wheel',e=>{e.preventDefault();const p=pt(e);zoomAt(e.deltaY>0?1/1.12:1.12,p.x,p.y)},{passive:false});
 $('zi2').onclick=()=>zoomAt(1.25);$('zo2').onclick=()=>zoomAt(0.8);$('zf2').onclick=()=>{fitView();draw2d()};
 $('lyC').onclick=()=>{showC=!showC;$('lyC').classList.toggle('on',showC);draw2d()};
@@ -644,6 +648,7 @@ function props(){const it=cur(),w=curW(),el=$('props');status();$('mbObj').class
    <div class="row">${[['-15','↺ 15°'],['15','↻ 15°'],['-90','↺ 90°'],['90','↻ 90°'],['z','歸零']].map(([v,t])=>`<button data-ro="${v}">${t}</button>`).join('')}</div>`}
    ${mt==='w'?`<label class="f">離地 cm<input data-p="elev" type="number" min="0" value="${it.elev}"></label>`:''}
    ${['window','balcony','fold'].includes(c.s)?`<label class="f">窗簾<span><input type="checkbox" data-p="cur" ${it.cur!==false?'checked':''} style="width:22px;height:22px;min-height:0;vertical-align:middle"> 顯示窗簾</span></label>`:''}
+   ${c.s==='door'||c.s==='door2'?`<div class="row" style="margin:6px 0">${c.s==='door'?`<button data-door="hinge">${it.hinge==='R'?'鉸鏈：右 ⇄':'鉸鏈：左 ⇄'}</button>`:''}<button data-door="out">${it.out?'向外開 ⇅':'向內開 ⇅'}</button></div><p class="tip" style="margin-top:0">平面圖上雙擊門也可以切換開門方向</p>`:''}
    <label class="f">顏色<input data-p="color" type="color" value="${it.color}"></label>
    <label class="f">價格 NT$<input data-p="price" type="number" min="0" step="100" value="${it.price}"></label>
    ${bad?'<p class="warn">這件家具和別的家具或牆重疊，或超出房間範圍。</p>':''}`}
@@ -657,7 +662,9 @@ $('props').addEventListener('change',e=>{if(e.target.id==='rotR'){rangeEd=false;
     normW(w);S.items.filter(i=>i.wid===w.id).forEach(resnap);all();return}
   const p=e.target.dataset.p,it=cur();if(!p||!it)return;commit();let v=p==='cur'?e.target.checked:e.target.value;
   if(p==='rot')v=nrot(+v||0);else if(['w','d','h','price','elev'].includes(p))v=Math.max(p==='price'||p==='elev'?0:1,+v||0);it[p]=v;if(p==='w'||p==='d'||p==='elev')resnap(it);all()});
-$('props').addEventListener('click',e=>{const ro=e.target.dataset.ro,it=cur();if(ro&&it){commit();it.rot=ro==='z'?0:nrot(it.rot+(+ro));all();return}
+function flipDoor(it,what){commit();if(what==='hinge')it.hinge=it.hinge==='R'?'L':'R';else if(what==='out')it.out=!it.out;
+  else{if(CAT[it.type].s==='door2')it.out=!it.out;else{const k=(it.hinge==='R'?1:0)+(it.out?2:0),n=(k+1)%4;it.hinge=n&1?'R':'L';it.out=!!(n&2)}}all()}
+$('props').addEventListener('click',e=>{const dr=e.target.closest('[data-door]');if(dr&&cur()){flipDoor(cur(),dr.dataset.door);return}const ro=e.target.dataset.ro,it=cur();if(ro&&it){commit();it.rot=ro==='z'?0:nrot(it.rot+(+ro));all();return}
   const q=e.target.dataset.q;if(!q||!it)return;commit();
   if(q==='reset'){const c=CAT[it.type];it.w=c.w;it.h=c.h;if(!it.wid)it.d=c.d}else{const k=q[0],dv=+q.slice(1);it[k]=Math.max(5,it[k]+dv)}resnap(it);all()});
 function act(a){const w=curW();
@@ -855,7 +862,7 @@ function parts(it){const{w,d,h,color:c}=it,st=STYLES[S.style]||STYLES.nordic,leg
   case'ac':P.push(B(0,h/2,0,w,h,d,c,'plain',6),B(0,5,d/2-3,w-10,2,3,'#cfcfcd','plain',0.5),B(w*0.32,h*0.6,d/2+0.1,6,2,0.3,'#4caf73','emit',0.2));break;
   case'door':{P.push(B(-w/2-3,h/2+1.5,0,6,h+3,d+2,'#f2f1ec','plain',0.6),B(w/2+3,h/2+1.5,0,6,h+3,d+2,'#f2f1ec','plain',0.6),B(0,h+3,0,w+12,6,d+2,'#f2f1ec','plain',0.6),
       B(0,h/2,0,w-1,h-1,4,c,'wood',0.5),B(0,h*0.7,2.2,w-24,h*0.42,0.6,shade(c,0.05),'wood',0.3),B(0,h*0.27,2.2,w-24,h*0.34,0.6,shade(c,0.05),'wood',0.3),
-      C(w/2-9,100,4,1.8,1.8,3,mt,'metal',16,false,[Math.PI/2,0,0]),B(w/2-14,100,6,12,1.6,1.6,mt,'metal',0.7));break}
+      ...(()=>{const hs=it.hinge==='R'?-1:1,q=[];for(const z of[1,-1])q.push(C(hs*(w/2-9),100,z*4,1.8,1.8,3,mt,'metal',16,false,[Math.PI/2,0,0]),B(hs*(w/2-14),100,z*6,12,1.6,1.6,mt,'metal',0.7));return q})());break}
   case'window':{const top=Math.min(h+25,S.room.h-it.elev-6),fz=d/2;P.push(B(0,-1.5,3,w+10,3,d+6,'#efeeea','stone',0.5),
       B(0,h/2,0,w,6,d,c,'plain',0.5),B(-w/2+3,h/2,0,6,h,d,c,'plain',0.5),B(w/2-3,h/2,0,6,h,d,c,'plain',0.5),B(0,h-3,0,w,6,d,c,'plain',0.5),B(0,3,0,w,6,d,c,'plain',0.5),
       (it.wid?Pl(0,h/2,0,w-10,h-10,'#cfe3ea','glass'):Pl(0,h/2,-d/2+1,w-10,h-10,'#dfeef8','sky')),B(0,h/2,1,4,h-6,4,c,'plain',0.5),
