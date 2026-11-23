@@ -313,6 +313,8 @@ const CAT={
   door2:{n:'雙開門',g:'open',w:140,d:8,h:210,p:22000,k:'wood',s:'door2',m:'w',e:0},
   slide:{n:'推拉門',g:'open',w:160,d:8,h:210,p:18000,k:'wood',s:'slide',m:'w',e:0},
   windowL:{n:'落地窗',g:'open',w:240,d:10,h:220,p:28000,k:'frame',s:'window',m:'w',e:0},
+  balcony:{n:'陽台落地推拉門',g:'open',w:240,d:10,h:220,p:35000,k:'frame',s:'balcony',m:'w',e:0},
+  fold:{n:'玻璃摺疊門',g:'open',w:300,d:10,h:220,p:60000,k:'frame',s:'fold',m:'w',e:0},
   windowS:{n:'小窗',g:'open',w:80,d:10,h:80,p:6000,k:'frame',s:'window',m:'w',e:120},
   wshelf:{n:'壁掛層板',g:'open',w:100,d:25,h:4,p:1200,k:'wood',s:'wshelf',m:'w',e:140},
   clock:{n:'掛鐘',g:'open',w:32,d:4,h:32,p:900,k:'wood',s:'clock',m:'w',e:180},
@@ -331,7 +333,7 @@ const CAT={
   otable:{n:'戶外圓桌',g:'outdoor',w:70,d:70,h:72,p:3500,k:'metal',s:'roundt'},
   ochair:{n:'戶外椅',g:'outdoor',w:50,d:55,h:85,p:1800,k:'metal',s:'chair'}
 };
-const isOpen=t=>['door','door2','slide','window'].includes(CAT[t].s),isDoorL=t=>['door','door2','slide'].includes(CAT[t].s),isRug=t=>['rug','rugR'].includes(CAT[t].s);
+const isOpen=t=>['door','door2','slide','window','balcony','fold'].includes(CAT[t].s),isDoorL=t=>['door','door2','slide'].includes(CAT[t].s),isRug=t=>['rug','rugR'].includes(CAT[t].s);
 const MOUNT=t=>CAT[t].m||'f';
 const FIX={white:'#f4f3f0',glass:'#cfe3ea',frame:'#ecebe8',artf:'#3a3633',dark:'#2a2a2c',clay:'#d9cbb8',piano:'#141416',accent:'#2f4b6e'};
 const FLOORS={oak:{n:'超耐磨木地板',c:'#c9a274',p:3800},wood:{n:'實木地板',c:'#8d5c3b',p:9000},tile:{n:'拋光石英磚',c:'#e2e0db',p:4500},epoxy:{n:'環氧樹脂地坪',c:'#9b9995',p:5500}};
@@ -487,6 +489,9 @@ function sym(it,tc,fs,sc,sw,dash){const{w,d,color:c}=it,L=-w/2,T=-d/2,k=CAT[it.t
   case'door2':{const lw=w/2;o+=Ln(L,d/2,L,d/2+lw,`stroke="${tc}" stroke-opacity=".7" stroke-width="${fs*0.14}"`)+Ln(w/2,d/2,w/2,d/2+lw,`stroke="${tc}" stroke-opacity=".7" stroke-width="${fs*0.14}"`)+
     `<path d="M${L} ${d/2+lw}A${lw} ${lw} 0 0 0 0 ${d/2}M${w/2} ${d/2+lw}A${lw} ${lw} 0 0 1 0 ${d/2}" fill="none" stroke="${tc}" stroke-opacity=".45" stroke-width="${fs*0.08}" stroke-dasharray="${fs*0.35} ${fs*0.25}"/>`;break}
   case'slide':o+=R(L,T-1,w/2+4,d/2+1,F(0.35),0)+R(-4,0,w/2+4,d/2+1,F(0.2),0)+`<path d="M${-w*0.3} ${d/2+fs*0.9}h${w*0.2}m-${fs*0.5} -${fs*0.4}l${fs*0.5} ${fs*0.4}l-${fs*0.5} ${fs*0.4}" fill="none" stroke="${tc}" stroke-opacity=".5" stroke-width="${fs*0.08}"/>`;break;
+  case'balcony':{const n=w>=280?4:2,pw=w/n;o+=R(L,T,w,d,'fill="#e9eef1"',0);for(let i=0;i<n;i++)o+=R(L+pw*i,(i===0||i===n-1)?T:0,pw+(i<n-1?3:0),d/2,`fill="#9fc3d3" stroke="${tc}" stroke-opacity=".4" stroke-width="${fs*0.06}"`,0);
+    o+=`<path d="M${-w*0.25} ${d/2+fs*0.9}h${w*0.18}m-${fs*0.5} -${fs*0.4}l${fs*0.5} ${fs*0.4}l-${fs*0.5} ${fs*0.4}M${w*0.25} ${d/2+fs*0.9}h-${w*0.18}m${fs*0.5} -${fs*0.4}l-${fs*0.5} ${fs*0.4}l${fs*0.5} ${fs*0.4}" fill="none" stroke="${tc}" stroke-opacity=".55" stroke-width="${fs*0.09}"/>`;break}
+  case'fold':{const n=Math.max(3,Math.round(w/60)),pw=w/n,dz=pw*0.38;let pts=`${L},${d/2}`;for(let i=1;i<=n;i++)pts+=` ${L+pw*i},${d/2+(i%2?dz:0)}`;o+=R(L,T,w,d,'fill="#e9eef1"',0)+`<polyline points="${pts}" fill="none" stroke="#5d8fa6" stroke-width="${fs*0.16}" stroke-linejoin="round"/>`;break}
   case'wshelf':o+=R(L+4,T+3,w*0.25,d-6,F(0.3),1);break;
   case'clock':o+=Ci(0,0,Math.min(fs*0.5,d),`fill="${tc}" fill-opacity=".4"`);break;
   case'vase':o+=Ci(0,0,w*0.32,`fill="${c}" ${ln}`)+[0,1,2,3,4].map(i=>Ci(Math.sin(i*1.26)*w*0.3,Math.cos(i*1.26)*w*0.3,w*0.1,'fill="#d9b56b"')).join('');break;
@@ -502,7 +507,7 @@ function sym(it,tc,fs,sc,sw,dash){const{w,d,color:c}=it,L=-w/2,T=-d/2,k=CAT[it.t
   case'plant':{const n=it.type==='plantL'?12:9;let lv='';for(let i=0;i<n;i++)lv+=`<ellipse cx="0" cy="${-w*0.27}" rx="${w*0.12}" ry="${w*0.25}" fill="${i%2?c:shade(c,-0.15)}" transform="rotate(${i*360/n+it.id*13})"/>`;o+=Ci(0,0,w*0.3,'fill="#cbbfb0"')+lv;break}}
   if(nb)o+=R(L,T,w,d,`fill="transparent" stroke="${sc||'none'}" stroke-width="${sw}" ${da}`,rr);
   return o}
-function thumb(type){const c=CAT[type],it={id:type.length*7,type,w:c.w,d:c.d,h:c.h,color:colorOf(c.k,S.style)},m=Math.max(c.w,c.d),p=m*0.12,ex=c.s==='door'?c.w:c.s==='door2'?c.w/2:0,fs=m/14;
+function thumb(type){const c=CAT[type],it={id:type.length*7,type,w:c.w,d:c.d,h:c.h,color:colorOf(c.k,S.style)},m=Math.max(c.w,c.d),p=m*0.12,ex=c.s==='door'?c.w:c.s==='door2'?c.w/2:c.s==='fold'?c.w/Math.max(3,Math.round(c.w/60))*0.4:c.s==='balcony'?14:0,fs=m/14;
   return`<svg viewBox="${-c.w/2-p} ${-c.d/2-p} ${c.w+2*p} ${c.d+2*p+ex}" preserveAspectRatio="xMidYMid meet">${sym(it,lum(it.color)>0.55?'#2a2925':'#fff',fs,null,fs*0.08,false)}</svg>`}
 
 /* ================= stencil library ================= */
@@ -558,8 +563,8 @@ function draw2d(){const W=S.room.w,D=S.room.d,base=Math.max(W,D),m=base/(mq.matc
       `<text ${hz?`x="${mx}" y="${my-o}" text-anchor="middle"`:`transform="translate(${mx+o} ${my}) rotate(90)" text-anchor="middle"`} font-size="${fs*0.8}" font-weight="700" fill="var(--acc)" stroke="var(--panel)" stroke-width="${fs*0.3}" paint-order="stroke" pointer-events="none">${wlen(cw)} cm</text>`;
     if(showD){const sg=hz?`${seg(0,my,r.x1,my,r.x1)}${seg(r.x2,my,W,my,W-r.x2)}`:`${seg(mx,0,mx,r.y1,r.y1)}${seg(mx,r.y2,mx,D,D-r.y2)}`;dim+=`<g stroke="var(--acc)" stroke-width="${fs*0.06}" font-size="${fs*0.72}" stroke-opacity=".6">${sg}</g>`}}
   let pre='';if(drag&&drag.nw){const L=Math.abs(drag.x1-drag.x0)+Math.abs(drag.y1-drag.y0),hz=drag.y1===drag.y0;
-    pre=`<line x1="${drag.x0}" y1="${drag.y0}" x2="${drag.x1}" y2="${drag.y1}" stroke="var(--acc)" stroke-opacity=".55" stroke-width="12" stroke-linecap="square"/><circle cx="${drag.x0}" cy="${drag.y0}" r="${hs*0.5}" fill="var(--acc)"/>`+
-      (L?`<text x="${(drag.x0+drag.x1)/2+(hz?0:fs*1.2)}" y="${(drag.y0+drag.y1)/2-(hz?fs*1.2:0)}" text-anchor="middle" font-size="${fs*0.9}" font-weight="700" fill="var(--acc)" stroke="var(--panel)" stroke-width="${fs*0.3}" paint-order="stroke">${L} cm</text>`:'')}
+    pre=`<g pointer-events="none"><line x1="${drag.x0}" y1="${drag.y0}" x2="${drag.x1}" y2="${drag.y1}" stroke="var(--acc)" stroke-opacity=".55" stroke-width="12" stroke-linecap="square"/><circle cx="${drag.x0}" cy="${drag.y0}" r="${hs*0.5}" fill="var(--acc)"/>`+
+      (L?`<text x="${(drag.x0+drag.x1)/2+(hz?0:fs*1.2)}" y="${(drag.y0+drag.y1)/2-(hz?fs*1.2:0)}" text-anchor="middle" font-size="${fs*0.9}" font-weight="700" fill="var(--acc)" stroke="var(--panel)" stroke-width="${fs*0.3}" paint-order="stroke">${L} cm</text>`:'')+'</g>'}
   svg.innerHTML=`<defs><pattern id="gp" width="50" height="50" patternUnits="userSpaceOnUse"><path d="M50 0H0V50" fill="none" stroke="var(--grid)" stroke-width="${fs*0.05}"/></pattern><pattern id="gp2" width="100" height="100" patternUnits="userSpaceOnUse"><path d="M100 0H0V100" fill="none" stroke="var(--grid2)" stroke-width="${fs*0.06}"/></pattern></defs>
     <rect x="0" y="0" width="${W}" height="${D}" fill="${fl}" fill-opacity=".3"/><rect x="0" y="0" width="${W}" height="${D}" fill="url(#gp)"/><rect x="0" y="0" width="${W}" height="${D}" fill="url(#gp2)"/>
     <rect x="-6" y="-6" width="${W+12}" height="${D+12}" fill="none" stroke="var(--ink)" stroke-width="12"/>
@@ -568,7 +573,7 @@ function draw2d(){const W=S.room.w,D=S.room.d,base=Math.max(W,D),m=base/(mq.matc
   status()}
 function status(){const it=cur(),w=curW();let h;
   if(w)h=`<b>隔間牆</b><span>長 ${wlen(w)} cm · 厚 ${w.t} cm · 高 ${w.h?w.h+' cm':'到天花'}</span><span class="opt">拖兩端圓點改長度 · 拖牆身移動 · Delete 刪除</span>`;
-  else if(mode2==='wall')h='<b>畫牆模式</b><span>在平面圖上拖曳即可畫牆，自動水平／垂直並吸附端點</span><span class="opt">Esc 或「選取」結束</span>';
+  else if(mode2==='wall')h='<b>畫牆模式</b><span>拖曳畫牆；點一下現有的牆或家具可選取</span><span class="opt">Esc 或「選取」結束</span>';
   else if(it)h=`<b>${esc(it.name)}</b><span>${Math.round(it.w)}×${Math.round(it.d)}×${it.h} cm${MOUNT(it.type)==='w'?'':' · '+it.rot+'°'}</span><span class="opt">${MOUNT(it.type)==='c'?'天花':MOUNT(it.type)==='w'?'壁掛 · 離地 '+it.elev+' cm':'落地'}</span><span class="opt">${MOUNT(it.type)==='w'?'自動貼牆，拖到別面牆即可換方向 · 白點改寬度':'白點改尺寸 · 藍點旋轉（每 15°，Shift 自由角度）'}</span>`;
   else h=`<span>${S.items.length} 件物件 · ${S.walls.length} 道隔間牆</span><span class="opt">滾輪縮放 · 拖曳空白處平移 · W 畫牆 · R 旋轉</span>`;
   $('st2').innerHTML=h+`<span class="opt">縮放 ${Math.round(vz*100)}%</span>`;
@@ -607,9 +612,13 @@ svg.addEventListener('pointermove',e=>{if(!drag)return;
   const it=cur(),ox=it.x,oy=it.y,orot=it.rot;
   if(MOUNT(it.type)==='w')snapWall(it,p.x,p.y);else{[it.x,it.y]=magnet(it,sn(p.x-drag.dx),sn(p.y-drag.dy))}
   if(it.x!==ox||it.y!==oy||it.rot!==orot){drag.moved=true;draw2d()}});
-svg.addEventListener('pointerup',()=>{if(!drag)return;svg.classList.remove('pan');const dg=drag;drag=null;
+svg.addEventListener('pointerup',e=>{if(!drag)return;svg.classList.remove('pan');const dg=drag;drag=null;
   if(dg.pan){if(!dg.moved){sel=null;selW=null;props()}draw2d();return}
-  if(dg.nw){const w={id:wuid++,x1:dg.x0,y1:dg.y0,x2:dg.x1,y2:dg.y1,t:12,h:0};if(wlen(w)>=20){commit();normW(w);S.walls.push(w);selW=w.id;sel=null;all();toast(`已新增 ${wlen(w)} cm 的牆，可繼續畫或按 Esc 結束`)}else draw2d();return}
+  if(dg.nw){const w={id:wuid++,x1:dg.x0,y1:dg.y0,x2:dg.x1,y2:dg.y1,t:12,h:0};
+    if(wlen(w)<20){const el=document.elementFromPoint(e.clientX,e.clientY),g=el&&el.closest('.it'),wl=el&&el.closest('.wl');
+      if(g||wl){sel=g?+g.dataset.id:null;selW=wl&&!g?+wl.dataset.w:null;setTool('sel');toast('已切回「選取」，按 Delete 或「刪除」可移除');return}}
+    const W_=S.room.w,D_=S.room.d;if((w.x1===w.x2&&(w.x1<=1||w.x1>=W_-1))||(w.y1===w.y2&&(w.y1<=1||w.y1>=D_-1))){toast('這裡已經是外牆了，隔間牆要畫在房間裡面');draw2d();return}
+    if(wlen(w)>=20){commit();normW(w);S.walls.push(w);selW=w.id;sel=null;all();toast(`已新增 ${wlen(w)} cm 的牆，可繼續畫或按 Esc 結束`)}else draw2d();return}
   if(dg.we||dg.wm){if(!dg.moved){hist.pop();all();return}const w=curW();normW(w);if(wlen(w)<20){S=JSON.parse(hist.pop());toast('牆太短了，至少 20 cm')}else S.items.filter(i=>i.wid===w.id).forEach(resnap);all();return}
   if(!dg.moved)hist.pop();const it=cur();if(dg.rs&&it)resnap(it);all()});
 svg.addEventListener('wheel',e=>{e.preventDefault();const p=pt(e);zoomAt(e.deltaY>0?1/1.12:1.12,p.x,p.y)},{passive:false});
@@ -633,6 +642,7 @@ function props(){const it=cur(),w=curW(),el=$('props');status();$('mbObj').class
    <input type="range" id="rotR" min="0" max="359" step="1" value="${it.rot}" aria-label="旋轉角度">
    <div class="row">${[['-15','↺ 15°'],['15','↻ 15°'],['-90','↺ 90°'],['90','↻ 90°'],['z','歸零']].map(([v,t])=>`<button data-ro="${v}">${t}</button>`).join('')}</div>`}
    ${mt==='w'?`<label class="f">離地 cm<input data-p="elev" type="number" min="0" value="${it.elev}"></label>`:''}
+   ${['window','balcony','fold'].includes(c.s)?`<label class="f">窗簾<span><input type="checkbox" data-p="cur" ${it.cur!==false?'checked':''} style="width:22px;height:22px;min-height:0;vertical-align:middle"> 顯示窗簾</span></label>`:''}
    <label class="f">顏色<input data-p="color" type="color" value="${it.color}"></label>
    <label class="f">價格 NT$<input data-p="price" type="number" min="0" step="100" value="${it.price}"></label>
    ${bad?'<p class="warn">這件家具和別的家具或牆重疊，或超出房間範圍。</p>':''}`}
@@ -644,7 +654,7 @@ $('props').addEventListener('change',e=>{if(e.target.id==='rotR'){rangeEd=false;
     if(wp==='t')w.t=clamp(v,4,60);if(wp==='h')w.h=v>=S.room.h||v<=0?0:Math.max(20,v);
     if(wp==='x1'||wp==='y1'){const k=wp[0],lim=k==='x'?W-(w.x2-w.x1):D-(w.y2-w.y1),dd=clamp(v,0,lim)-w[k+'1'];w[k+'1']+=dd;w[k+'2']+=dd;S.items.forEach(i=>{if(i.wid===w.id)i[k]+=dd})}
     normW(w);S.items.filter(i=>i.wid===w.id).forEach(resnap);all();return}
-  const p=e.target.dataset.p,it=cur();if(!p||!it)return;commit();let v=e.target.value;
+  const p=e.target.dataset.p,it=cur();if(!p||!it)return;commit();let v=p==='cur'?e.target.checked:e.target.value;
   if(p==='rot')v=nrot(+v||0);else if(['w','d','h','price','elev'].includes(p))v=Math.max(p==='price'||p==='elev'?0:1,+v||0);it[p]=v;if(p==='w'||p==='d'||p==='elev')resnap(it);all()});
 $('props').addEventListener('click',e=>{const ro=e.target.dataset.ro,it=cur();if(ro&&it){commit();it.rot=ro==='z'?0:nrot(it.rot+(+ro));all();return}
   const q=e.target.dataset.q;if(!q||!it)return;commit();
@@ -758,6 +768,7 @@ function sofaParts(P,ox,oz,w,d,h,c,leg,o){const lh=12,aw=Math.min(18,w*0.12),bd=
   return{seat,iw,x0}}
 function parts(it){const{w,d,h,color:c}=it,st=STYLES[S.style]||STYLES.nordic,leg=shade(st.wood,-0.25),mt=st.metal,P=[],rnd=rng(it.id*31+7),WH='#f6f5f2';
   const legs=(lh,ix,iz,col,m,rt,rb)=>{for(const sx of[-1,1])for(const sz of[-1,1])P.push(C(sx*(w/2-ix),lh/2,sz*(d/2-iz),rt||2,rb||1.5,lh,col||leg,m||'wood',16))};
+  const curtains=(top,fz)=>{const fh=top+it.elev-2,cc=shade(st.fabric,0.12);for(const s of[-1,1])for(let i=0;i<6;i++)P.push(C(s*(w/2+6+i*4.6),top-fh/2,fz+9+(i%2)*1.4,2.6,2.9,fh,cc,'fabric',12))};
   const fronts=(n,y0,y1,z,col,hy)=>{const fw=w/n;for(let i=0;i<n;i++){const x=-w/2+fw*(i+0.5);P.push(B(x,(y0+y1)/2,z,fw-0.8,y1-y0,1.6,shade(col,0.03),'wood',0.5));if(hy!=null)P.push(B(x+(n>1?(i%2?-1:1)*(fw/2-4):0),hy,z+1.4,n>1?1.4:fw*0.4,n>1?24:1.2,1.4,mt,'metal',0.5))}};
   switch(CAT[it.type].s){
   case'sofa':{const n=w>=190?3:w>=130?2:1,r=sofaParts(P,0,0,w,d,h,c,leg,{L:true,R:true,n});
@@ -845,7 +856,14 @@ function parts(it){const{w,d,h,color:c}=it,st=STYLES[S.style]||STYLES.nordic,leg
       B(0,h/2,0,w,6,d,c,'plain',0.5),B(-w/2+3,h/2,0,6,h,d,c,'plain',0.5),B(w/2-3,h/2,0,6,h,d,c,'plain',0.5),B(0,h-3,0,w,6,d,c,'plain',0.5),B(0,3,0,w,6,d,c,'plain',0.5),
       (it.wid?Pl(0,h/2,0,w-10,h-10,'#cfe3ea','glass'):Pl(0,h/2,-d/2+1,w-10,h-10,'#dfeef8','sky')),B(0,h/2,1,4,h-6,4,c,'plain',0.5),
       C(0,top,fz+9,1,1,w+60,shade(st.metal,-0.2),'metal',12,false,[0,0,Math.PI/2]));
-    const fh=top+it.elev-2,cc=shade(st.fabric,0.12);for(const s of[-1,1])for(let i=0;i<6;i++)P.push(C(s*(w/2+6+i*4.6),top-fh/2,fz+9+(i%2)*1.4,2.6,2.9,fh,cc,'fabric',12));break}
+    if(it.cur!==false)curtains(top,fz);else P.pop();break}
+  case'balcony':case'fold':{const top=Math.min(h+15,S.room.h-it.elev-6),fz=d/2,gm=it.wid?'glass':'sky',gc=it.wid?'#cfe3ea':'#dfeef8';
+    P.push(B(0,h-3,0,w,6,d,c,'metal',0.5),B(0,1.5,0,w,3,d+2,c,'metal',0.5),B(-w/2+3,h/2,0,6,h,d,c,'metal',0.5),B(w/2-3,h/2,0,6,h,d,c,'metal',0.5),B(0,-1,4,w+8,2,d+8,'#efeeea','stone',0.4));
+    const panel=(x,z,ry,pw,ph,y0)=>{const co=Math.cos(ry),si=Math.sin(ry);for(const ox of[-(pw/2-2.5),pw/2-2.5])P.push(B(x+ox*co,y0+ph/2,z-ox*si,5,ph,4,c,'metal',0.6,[0,ry,0]));
+      P.push(B(x,y0+ph-3,z,pw,6,4,c,'metal',0.6,[0,ry,0]),B(x,y0+4,z,pw,8,4,c,'metal',0.6,[0,ry,0]),Pl(x,y0+ph/2+1,z,pw-8,ph-14,gc,gm,[0,ry,0]))};
+    if(CAT[it.type].s==='balcony'){const n=w>=280?4:2,pw=(w-12)/n+4;for(let i=0;i<n;i++){const x=-w/2+6+(w-12)*(i+0.5)/n,z=(i===0||i===n-1)?-1.8:1.8;panel(x,z,0,pw,h-6,3);P.push(B(x+(i<n/2?pw/2-6:-pw/2+6),h*0.45,z+(z>0?2.4:-2.4),1.6,26,1.6,'#9aa0a6','metal',0.6))}}
+    else{const n=Math.max(3,Math.round(w/60)),pw=(w-12)/n;for(let i=0;i<n;i++){const ry=(i%2?-1:1)*0.16;panel(-w/2+6+pw*(i+0.5),0,ry,pw*0.99,h-6,3)}}
+    P.push(C(0,top,fz+9,1,1,w+60,shade(st.metal,-0.2),'metal',12,false,[0,0,Math.PI/2]));if(it.cur!==false)curtains(top,fz);else P.pop();break}
   case'art':P.push(B(0,h/2,0,w,h,d,c,'wood',0.4),Pl(0,h/2,d/2+0.05,w-8,h-8,'#ffffff','art'));break;
   case'mirror':P.push(B(0,h/2,0,w,h,d,c,'metal',0.6),B(0,h/2,d/2-0.6,w-3,h-3,0.4,'#e3eaee','mirror',0.1));break;
   case'plant':{const ph_=Math.min(34,h*0.3),big=it.type==='plantL';P.push(C(0,ph_/2,0,w*0.3,w*0.22,ph_,'#cbbfb0','ceramic',28),C(0,ph_-1,0,w*0.28,w*0.28,1,'#3b2e24','plain'));
