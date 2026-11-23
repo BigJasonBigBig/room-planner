@@ -409,6 +409,14 @@ function snapPt(p,ex){const W=S.room.w,D=S.room.d,g=14/Math.sqrt(vz);let x=Math.
   S.walls.forEach(w=>{if(w.id===ex)return;xs.push(w.x1,w.x2);ys.push(w.y1,w.y2)});
   let bx=g,by=g;for(const v of xs)if(Math.abs(p.x-v)<bx){bx=Math.abs(p.x-v);x=v}for(const v of ys)if(Math.abs(p.y-v)<by){by=Math.abs(p.y-v);y=v}
   return{x:clamp(x,0,W),y:clamp(y,0,D)}}
+/* auto partition wall for doors/windows dropped mid-room */
+function wallDist(px,py){let d=Math.min(px,py,S.room.w-px,S.room.d-py);S.walls.forEach(w=>{const r=wrect(w);if(isH(w)){if(px>=r.x1-5&&px<=r.x2+5)d=Math.min(d,Math.abs(py-w.y1))}else if(py>=r.y1-5&&py<=r.y2+5)d=Math.min(d,Math.abs(px-w.x1))});return d}
+function autoSeg(it,px,py){if(!isOpen(it.type)||wallDist(px,py)<=50)return null;const W=S.room.w,D=S.room.d,sn=v=>Math.round(v/5)*5,x=sn(px),y=sn(py),C=[];
+  {let a=0,b=W;S.walls.filter(w=>!isH(w)&&w.y1<=y&&y<=w.y2).forEach(w=>{if(w.x1<x)a=Math.max(a,w.x1);else b=Math.min(b,w.x1)});C.push({x1:a,y1:y,x2:b,y2:y,L:b-a})}
+  {let a=0,b=D;S.walls.filter(w=>isH(w)&&w.x1<=x&&x<=w.x2).forEach(w=>{if(w.y1<y)a=Math.max(a,w.y1);else b=Math.min(b,w.y1)});C.push({x1:x,y1:a,x2:x,y2:b,L:b-a})}
+  const ok=C.filter(c=>c.L>=it.w+2).sort((p,q)=>p.L-q.L);return ok[0]||null}
+function autoWall(it,px,py){const g=autoSeg(it,px,py);if(!g)return false;const w={id:wuid++,x1:g.x1,y1:g.y1,x2:g.x2,y2:g.y2,t:12,h:0};normW(w);S.walls.push(w);snapWall(it,isH(w)?px:w.x1,isH(w)?w.y1:py);
+  toast(`已自動建立一道 ${wlen(w)} cm 的牆，並把「${it.name}」裝上去（不要可按復原）`);return true}
 function problems(){const bad=new Set(),W=S.room.w,D=S.room.d,wr=S.walls.map(w=>{const r=wrect(w);return corners((r.x1+r.x2)/2,(r.y1+r.y2)/2,r.x2-r.x1,r.y2-r.y1,0)});
   const b=S.items.map(it=>{const f=fp(it);return{id:it.id,skip:isRug(it.type)||MOUNT(it.type)!=='f',P:corners(it.x,it.y,it.w,it.d,it.rot||0),x1:it.x-f.w/2,x2:it.x+f.w/2,y1:it.y-f.d/2,y2:it.y+f.d/2}});
   b.forEach(a=>{if(a.x1<-0.5||a.y1<-0.5||a.x2>W+0.5||a.y2>D+0.5)bad.add(a.id);if(!a.skip&&wr.some(Q=>sat(a.P,Q)))bad.add(a.id)});
@@ -525,7 +533,7 @@ function drawCat(){const q=$('q').value.trim();const open=new Set([...document.q
     const op=q||(first?['living','bed','light','open'].includes(g):open.has(g));
     return`<details class="grp" data-g="${g}" ${op?'open':''}><summary>${gn}<small>${ks.length+(wt?1:0)} 項</small></summary><div class="tiles">${wt?wallTile:''}${ks.map(k=>`<button class="tile" data-k="${k}" title="${CAT[k].n}：拖曳到平面圖或點一下加入">${thumb(k)}<b>${CAT[k].n}</b><small>${CAT[k].w}×${CAT[k].d}${MOUNT(k)==='c'?' · 天花':MOUNT(k)==='w'?' · 壁掛':''}</small></button>`).join('')}</div></details>`}).join('')||'<p class="empty">找不到符合的家具</p>'}
 $('q').addEventListener('input',drawCat);
-function addItem(k,px,py){commit();const it=mk(k,Math.round(px/5)*5,Math.round(py/5)*5,0,S.style);if(MOUNT(k)==='w')snapWall(it,px,py);S.items.push(it);sel=it.id;selW=null;if(mq.matches)openSheet(null);all();toast('已加入「'+it.name+'」'+(MOUNT(k)==='w'?'，會自動貼齊最近的牆':''))}
+function addItem(k,px,py,drop){commit();const it=mk(k,Math.round(px/5)*5,Math.round(py/5)*5,0,S.style);const aw=drop&&autoWall(it,px,py);if(!aw&&MOUNT(k)==='w')snapWall(it,px,py);S.items.push(it);sel=it.id;selW=null;if(mq.matches)openSheet(null);all();if(!aw)toast('已加入「'+it.name+'」'+(MOUNT(k)==='w'?(isOpen(k)?'，會自動貼齊最近的牆；拖到房間中間放開會自動建牆':'，會自動貼齊最近的牆'):''))}
 let pd=null;
 let lastPT='mouse';
 $('cat').addEventListener('click',e=>{const t=e.target.closest('.tile');if(!t||lastPT==='mouse')return;
@@ -535,7 +543,7 @@ $('cat').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' ')lastPT='
 $('cat').addEventListener('pointerdown',e=>{const t=e.target.closest('.tile');lastPT=e.pointerType||'mouse';if(!t||e.button>0||lastPT!=='mouse')return;if(e.pointerType==='mouse')e.preventDefault();if(t.dataset.tool){if(mq.matches)openSheet(null);setTool('wall');toast('畫牆模式：在平面圖上拖曳即可畫牆');return}pd={k:t.dataset.k,x:e.clientX,y:e.clientY,g:null,t}});
 window.addEventListener('pointermove',e=>{if(!pd)return;if(!pd.g&&Math.hypot(e.clientX-pd.x,e.clientY-pd.y)>6){if(tab!=='2d')setTab('2d');pd.g=document.createElement('div');pd.g.className='ghost';pd.g.innerHTML=thumb(pd.k);document.body.appendChild(pd.g)}
   if(pd.g){pd.g.style.left=e.clientX+'px';pd.g.style.top=e.clientY+'px'}});
-window.addEventListener('pointerup',e=>{if(!pd)return;const p=pd;pd=null;if(p.g){p.g.remove();const r=svg.getBoundingClientRect();if(e.clientX>r.left&&e.clientX<r.right&&e.clientY>r.top&&e.clientY<r.bottom){const q=pt(e);addItem(p.k,q.x,q.y)}}
+window.addEventListener('pointerup',e=>{if(!pd)return;const p=pd;pd=null;if(p.g){p.g.remove();const r=svg.getBoundingClientRect();if(e.clientX>r.left&&e.clientX<r.right&&e.clientY>r.top&&e.clientY<r.bottom){const q=pt(e);addItem(p.k,q.x,q.y,true)}}
   else if(e.target.closest('.tile')===p.t){if(tab!=='2d')setTab('2d');addItem(p.k,S.room.w/2,S.room.d/2)}});
 window.addEventListener('pointercancel',()=>{if(pd&&pd.g)pd.g.remove();pd=null});
 
@@ -570,7 +578,8 @@ function draw2d(){const W=S.room.w,D=S.room.d,base=Math.max(W,D),m=base/(mq.matc
     hd+=[1,2].map(k=>`<circle class="hd" data-e="${k}" cx="${cw['x'+k]}" cy="${cw['y'+k]}" r="${hit/2}" fill="transparent"/><circle cx="${cw['x'+k]}" cy="${cw['y'+k]}" r="${hs*0.6}" fill="#fff" stroke="var(--acc)" stroke-width="${fs*0.12}" pointer-events="none"/>`).join('')+
       `<text ${hz?`x="${mx}" y="${my-o}" text-anchor="middle"`:`transform="translate(${mx+o} ${my}) rotate(90)" text-anchor="middle"`} font-size="${fs*0.8}" font-weight="700" fill="var(--acc)" stroke="var(--panel)" stroke-width="${fs*0.3}" paint-order="stroke" pointer-events="none">${wlen(cw)} cm</text>`;
     if(showD){const sg=hz?`${seg(0,my,r.x1,my,r.x1)}${seg(r.x2,my,W,my,W-r.x2)}`:`${seg(mx,0,mx,r.y1,r.y1)}${seg(mx,r.y2,mx,D,D-r.y2)}`;dim+=`<g stroke="var(--acc)" stroke-width="${fs*0.06}" font-size="${fs*0.72}" stroke-opacity=".6">${sg}</g>`}}
-  let pre='';if(drag&&drag.nw){const L=Math.abs(drag.x1-drag.x0)+Math.abs(drag.y1-drag.y0),hz=drag.y1===drag.y0;
+  let pre='';if(drag&&drag.pv){const g=drag.pv,hz=g.y1===g.y2;pre=`<g pointer-events="none"><line x1="${g.x1}" y1="${g.y1}" x2="${g.x2}" y2="${g.y2}" stroke="var(--acc)" stroke-opacity=".6" stroke-width="12" stroke-dasharray="20 12"/><text x="${(g.x1+g.x2)/2+(hz?0:fs*1.2)}" y="${(g.y1+g.y2)/2-(hz?fs*1.1:0)}" text-anchor="middle" font-size="${fs*0.85}" font-weight="700" fill="var(--acc)" stroke="var(--panel)" stroke-width="${fs*0.3}" paint-order="stroke">放開會在這裡建牆 · ${g.L} cm</text></g>`}
+  if(drag&&drag.nw){const L=Math.abs(drag.x1-drag.x0)+Math.abs(drag.y1-drag.y0),hz=drag.y1===drag.y0;
     pre=`<g pointer-events="none"><line x1="${drag.x0}" y1="${drag.y0}" x2="${drag.x1}" y2="${drag.y1}" stroke="var(--acc)" stroke-opacity=".55" stroke-width="12" stroke-linecap="square"/><circle cx="${drag.x0}" cy="${drag.y0}" r="${hs*0.5}" fill="var(--acc)"/>`+
       (L?`<text x="${(drag.x0+drag.x1)/2+(hz?0:fs*1.2)}" y="${(drag.y0+drag.y1)/2-(hz?fs*1.2:0)}" text-anchor="middle" font-size="${fs*0.9}" font-weight="700" fill="var(--acc)" stroke="var(--panel)" stroke-width="${fs*0.3}" paint-order="stroke">${L} cm</text>`:'')+'</g>'}
   svg.innerHTML=`<defs><pattern id="gp" width="50" height="50" patternUnits="userSpaceOnUse"><path d="M50 0H0V50" fill="none" stroke="var(--grid)" stroke-width="${fs*0.05}"/></pattern><pattern id="gp2" width="100" height="100" patternUnits="userSpaceOnUse"><path d="M100 0H0V100" fill="none" stroke="var(--grid2)" stroke-width="${fs*0.06}"/></pattern></defs>
@@ -634,7 +643,7 @@ svg.addEventListener('pointermove',e=>{if(!drag)return;
     if(ROUNDS.has(CAT[it.type].s)){const m=drag.sx&&drag.sy?Math.max(w,d):drag.sx?w:d;w=d=m;cx=drag.sx?-drag.sx*drag.w0/2+drag.sx*m/2:0;cy=drag.sy?-drag.sy*drag.d0/2+drag.sy*m/2:0}
     it.w=w;it.d=d;it.x=Math.round((drag.cx+cx*co-cy*si)*10)/10;it.y=Math.round((drag.cy+cx*si+cy*co)*10)/10;drag.moved=true;draw2d();return}
   const it=cur(),ox=it.x,oy=it.y,orot=it.rot;
-  if(MOUNT(it.type)==='w')snapWall(it,p.x,p.y);else{[it.x,it.y]=magnet(it,sn(p.x-drag.dx),sn(p.y-drag.dy))}
+  if(MOUNT(it.type)==='w'){snapWall(it,p.x,p.y);drag.lp={x:p.x,y:p.y};const pv=autoSeg(it,p.x,p.y);if(!!pv!==!!drag.pv||(pv&&drag.pv&&(pv.x1!==drag.pv.x1||pv.y1!==drag.pv.y1))){drag.pv=pv;draw2d()}}else{[it.x,it.y]=magnet(it,sn(p.x-drag.dx),sn(p.y-drag.dy))}
   if(it.x!==ox||it.y!==oy||it.rot!==orot){drag.moved=true;draw2d()}});
 svg.addEventListener('pointerup',e=>{if(!drag)return;svg.classList.remove('pan');const dg=drag;drag=null;
   if(dg.pan){if(!dg.moved){sel=null;selW=null;props()}draw2d();return}
@@ -644,7 +653,7 @@ svg.addEventListener('pointerup',e=>{if(!drag)return;svg.classList.remove('pan')
     const W_=S.room.w,D_=S.room.d;if((w.x1===w.x2&&(w.x1<=1||w.x1>=W_-1))||(w.y1===w.y2&&(w.y1<=1||w.y1>=D_-1))){toast('這裡已經是外牆了，隔間牆要畫在房間裡面');draw2d();return}
     if(wlen(w)>=20){commit();normW(w);S.walls.push(w);selW=w.id;sel=null;all();toast(`已新增 ${wlen(w)} cm 的牆，可繼續畫或按 Esc 結束`)}else draw2d();return}
   if(dg.we||dg.wm){if(!dg.moved){hist.pop();all();return}const w=curW();normW(w);if(wlen(w)<20){S=JSON.parse(hist.pop());toast('牆太短了，至少 20 cm')}else S.items.filter(i=>i.wid===w.id).forEach(resnap);all();return}
-  if(!dg.moved)hist.pop();const it=cur();if(dg.rs&&it)resnap(it);all()});
+  if(!dg.moved)hist.pop();const it=cur();if(dg.rs&&it)resnap(it);if(dg.moved&&dg.pv&&it)autoWall(it,dg.lp.x,dg.lp.y);all()});
 let lastTap={};
 svg.addEventListener('wheel',e=>{e.preventDefault();const p=pt(e);zoomAt(e.deltaY>0?1/1.12:1.12,p.x,p.y)},{passive:false});
 $('zi2').onclick=()=>zoomAt(1.25);$('zo2').onclick=()=>zoomAt(0.8);$('zf2').onclick=()=>{fitView();draw2d()};
