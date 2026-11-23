@@ -325,6 +325,11 @@ const CAT={
   windowS:{n:'小窗',g:'open',w:80,d:10,h:80,p:6000,k:'frame',s:'window',m:'w',e:120},
   wshelf:{n:'壁掛層板',g:'open',w:100,d:25,h:4,p:1200,k:'wood',s:'wshelf',m:'w',e:140},
   clock:{n:'掛鐘',g:'open',w:32,d:4,h:32,p:900,k:'wood',s:'clock',m:'w',e:180},
+  hidWard:{n:'隱形衣櫃',g:'bed',w:180,d:60,h:240,p:32000,k:'wallc',s:'hidWard'},
+  wallbed:{n:'隱形床（掀床）',g:'bed',w:160,d:45,h:220,p:45000,k:'wallc',s:'wallbed'},
+  hidWall:{n:'隱藏式收納牆',g:'living',w:300,d:45,h:240,p:60000,k:'wallc',s:'hidWall'},
+  hidDoor:{n:'隱形門',g:'open',w:85,d:6,h:210,p:15000,k:'wallc',s:'hdoor',m:'w',e:0},
+  foldDesk:{n:'隱藏式摺疊書桌',g:'study',w:100,d:10,h:115,p:12000,k:'wallc',s:'foldDesk',m:'w',e:0},
   plantS:{n:'小盆栽',g:'decor',w:30,d:30,h:60,p:500,k:'plant',s:'plant'},
   vase:{n:'落地花瓶',g:'decor',w:30,d:30,h:80,p:1500,k:'clay',s:'vase'},
   piano:{n:'直立鋼琴',g:'pets',w:150,d:60,h:125,p:80000,k:'piano',s:'piano'},
@@ -340,7 +345,8 @@ const CAT={
   otable:{n:'戶外圓桌',g:'outdoor',w:70,d:70,h:72,p:3500,k:'metal',s:'roundt'},
   ochair:{n:'戶外椅',g:'outdoor',w:50,d:55,h:85,p:1800,k:'metal',s:'chair'}
 };
-const isOpen=t=>['door','door2','slide','window','balcony','fold'].includes(CAT[t].s),isDoorL=t=>['door','door2','slide'].includes(CAT[t].s),isRug=t=>['rug','rugR'].includes(CAT[t].s);
+const isSwing=t=>['door','hdoor'].includes(CAT[t].s),isFoldable=t=>['wallbed','foldDesk'].includes(CAT[t].s);
+const isOpen=t=>['door','door2','slide','window','balcony','fold','hdoor'].includes(CAT[t].s),isDoorL=t=>['door','door2','slide'].includes(CAT[t].s),isRug=t=>['rug','rugR'].includes(CAT[t].s);
 const MOUNT=t=>CAT[t].m||'f';
 const FIX={white:'#f4f3f0',glass:'#cfe3ea',frame:'#ecebe8',artf:'#3a3633',dark:'#2a2a2c',clay:'#d9cbb8',piano:'#141416',accent:'#2f4b6e'};
 const FLOORS={oak:{n:'超耐磨木地板',c:'#c9a274',p:3800},wood:{n:'實木地板',c:'#8d5c3b',p:9000},tile:{n:'拋光石英磚',c:'#e2e0db',p:4500},epoxy:{n:'環氧樹脂地坪',c:'#9b9995',p:5500}};
@@ -352,7 +358,7 @@ const STYLES={
   industrial:{n:'工業風',wall:'#8c8986',floor:'epoxy',ceil:'none',fabric:'#5b4636',wood:'#6b4a2f',metal:'#2c2c2c',rug:'#4a4440',plant:'#5a7d4c',tip:'不做天花露出樓板，皮革沙發、黑鐵與舊木料，燈光偏暖。'},
   american:{n:'美式',wall:'#cfd8c8',floor:'wood',ceil:'flat',fabric:'#efe5d1',wood:'#7a4b2a',metal:'#b08d57',rug:'#9c6b55',plant:'#58824d',tip:'實木深色家具配米色布沙發，黃銅燈具，牆面可加線板。'}
 };
-const colorOf=(k,st)=>(STYLES[st]||STYLES.nordic)[k]||FIX[k]||'#cccccc';
+const colorOf=(k,st)=>k==='wallc'?((S&&S.wall)||(STYLES[st]||STYLES.nordic).wall):(STYLES[st]||STYLES.nordic)[k]||FIX[k]||'#cccccc';
 const KEY='room-planner-v1',$=id=>document.getElementById(id);
 const mq=matchMedia('(max-width:760px)'),coarse=matchMedia('(pointer:coarse)');
 let S,sel=null,selW=null,mode2='sel',wuid=1,tab='2d',hist=[],uid=1,showC=true,showD=true,vz=1,vcx=0,vcy=0;
@@ -511,6 +517,12 @@ function sym(it,tc,fs,sc,sw,dash){const{w,d,color:c}=it,L=-w/2,T=-d/2,k=CAT[it.t
   case'balcony':{const n=w>=280?4:2,pw=w/n;o+=R(L,T,w,d,'fill="#e9eef1"',0);for(let i=0;i<n;i++)o+=R(L+pw*i,(i===0||i===n-1)?T:0,pw+(i<n-1?3:0),d/2,`fill="#9fc3d3" stroke="${tc}" stroke-opacity=".4" stroke-width="${fs*0.06}"`,0);
     o+=`<path d="M${-w*0.25} ${d/2+fs*0.9}h${w*0.18}m-${fs*0.5} -${fs*0.4}l${fs*0.5} ${fs*0.4}l-${fs*0.5} ${fs*0.4}M${w*0.25} ${d/2+fs*0.9}h-${w*0.18}m${fs*0.5} -${fs*0.4}l-${fs*0.5} ${fs*0.4}l${fs*0.5} ${fs*0.4}" fill="none" stroke="${tc}" stroke-opacity=".55" stroke-width="${fs*0.09}"/>`;break}
   case'fold':{const n=Math.max(3,Math.round(w/60)),pw=w/n,dz=pw*0.38;let pts=`${L},${d/2}`;for(let i=1;i<=n;i++)pts+=` ${L+pw*i},${d/2+(i%2?dz:0)}`;o+=R(L,T,w,d,'fill="#e9eef1"',0)+`<polyline points="${pts}" fill="none" stroke="#5d8fa6" stroke-width="${fs*0.16}" stroke-linejoin="round"/>`;break}
+  case'hidWard':{const n=Math.max(2,Math.round(w/60));for(let i=1;i<n;i++)o+=Ln(L+w*i/n,T,L+w*i/n,d/2,`stroke="${tc}" stroke-opacity=".25" stroke-width="${fs*0.06}"`);o+=Ln(L+4,0,w/2-4,0,`stroke="${tc}" stroke-opacity=".25" stroke-dasharray="${fs*0.3} ${fs*0.25}" stroke-width="${fs*0.06}"`);break}
+  case'hidWall':{const nw=Math.min(140,w*0.4);o+=R(-nw/2,T+4,nw,d-6,`fill="${shade(st0().wood,-0.05)}"`,1)+R(-nw*0.4,T+6,nw*0.8,3,'fill="#1c1c1e"',1);for(const s2 of[-1,1]){const n=Math.max(1,Math.round((w/2-nw/2)/60));for(let i=1;i<n;i++){const x=s2*(nw/2+(w/2-nw/2)*i/n);o+=Ln(x,T,x,d/2,`stroke="${tc}" stroke-opacity=".25" stroke-width="${fs*0.06}"`)}}break}
+  case'hdoor':{const hx=it.hinge==='R'?w/2:L,ox=it.hinge==='R'?L:w/2,sy=it.out?-1:1,sw2=(it.hinge==='R')!==!!it.out?1:0;o+=Ln(hx,sy*d/2,hx,sy*(d/2+w),`stroke="${tc}" stroke-opacity=".5" stroke-width="${fs*0.1}"`)+`<path d="M${hx} ${sy*(d/2+w)}A${w} ${w} 0 0 ${sw2} ${ox} ${sy*d/2}" fill="none" stroke="${tc}" stroke-opacity=".35" stroke-width="${fs*0.07}" stroke-dasharray="${fs*0.3} ${fs*0.25}"/>`;break}
+  case'wallbed':{if(it.open){o+=R(L,T,w,45,`fill="${dk}"`,1)+R(L+3,T+48,w-6,d-50,'fill="#f3f1ec" stroke="#0002"',4)+R(L+8,T+52,w/2-12,30,'fill="#fff"',6)+R(4,T+52,w/2-12,30,'fill="#fff"',6)+R(L+3,T+90,w-6,d-92,`fill="${st0().fabric}"`,3)}
+    else o+=R(L+3,T+3,w-6,d-6,ln,1)+`<rect x="${L}" y="${d/2}" width="${w}" height="210" fill="none" stroke="${tc}" stroke-opacity=".3" stroke-dasharray="${fs*0.3} ${fs*0.25}" stroke-width="${fs*0.06}"/>`;break}
+  case'foldDesk':{if(it.open)o+=R(L,T,w,10,`fill="${dk}"`,1)+R(L+2,T+10,w-4,d-12,`fill="${st0().wood}" ${ln}`,2)+R(-14,T+16,28,18,'fill="#2a2a2c"',1);else o+=R(L+2,T+1,w-4,d-2,ln,1);break}
   case'wshelf':o+=R(L+4,T+3,w*0.25,d-6,F(0.3),1);break;
   case'clock':o+=Ci(0,0,Math.min(fs*0.5,d),`fill="${tc}" fill-opacity=".4"`);break;
   case'vase':o+=Ci(0,0,w*0.32,`fill="${c}" ${ln}`)+[0,1,2,3,4].map(i=>Ci(Math.sin(i*1.26)*w*0.3,Math.cos(i*1.26)*w*0.3,w*0.1,'fill="#d9b56b"')).join('');break;
@@ -526,7 +538,7 @@ function sym(it,tc,fs,sc,sw,dash){const{w,d,color:c}=it,L=-w/2,T=-d/2,k=CAT[it.t
   case'plant':{const n=it.type==='plantL'?12:9;let lv='';for(let i=0;i<n;i++)lv+=`<ellipse cx="0" cy="${-w*0.27}" rx="${w*0.12}" ry="${w*0.25}" fill="${i%2?c:shade(c,-0.15)}" transform="rotate(${i*360/n+it.id*13})"/>`;o+=Ci(0,0,w*0.3,'fill="#cbbfb0"')+lv;break}}
   if(nb)o+=R(L,T,w,d,`fill="transparent" stroke="${sc||'none'}" stroke-width="${sw}" ${da}`,rr);
   return o}
-function thumb(type){const c=CAT[type],it={id:type.length*7,type,w:c.w,d:c.d,h:c.h,color:colorOf(c.k,S.style)},m=Math.max(c.w,c.d),p=m*0.12,ex=c.s==='door'?c.w:c.s==='door2'?c.w/2:c.s==='fold'?c.w/Math.max(3,Math.round(c.w/60))*0.4:c.s==='balcony'?14:0,fs=m/14;
+function thumb(type){const c=CAT[type],it={id:type.length*7,type,w:c.w,d:c.d,h:c.h,color:colorOf(c.k,S.style)},m=Math.max(c.w,c.d),p=m*0.12,ex=c.s==='door'||c.s==='hdoor'?c.w:c.s==='door2'?c.w/2:c.s==='fold'?c.w/Math.max(3,Math.round(c.w/60))*0.4:c.s==='balcony'?14:0,fs=m/14;
   return`<svg viewBox="${-c.w/2-p} ${-c.d/2-p} ${c.w+2*p} ${c.d+2*p+ex}" preserveAspectRatio="xMidYMid meet">${sym(it,lum(it.color)>0.55?'#2a2925':'#fff',fs,null,fs*0.08,false)}</svg>`}
 
 /* ================= stencil library ================= */
@@ -602,7 +614,7 @@ function status(){const it=cur(),w=curW();let h;
 function ctxBar(){const el=$('ctx'),it=cur(),w=curW();
   if(tab!=='2d'||(!it&&!w)||(drag&&!drag.pan)||pinch){el.hidden=true;return}
   let b=[];if(w)b=[['wrot','⟲ 轉向'],['dup','複製'],['del','刪除']];
-  else{const s=CAT[it.type].s,mt=MOUNT(it.type);if(s==='door')b.push(['hinge','⇄ 換邊'],['out','⇅ 內外']);else if(s==='door2')b.push(['out','⇅ 內外']);else if(mt!=='w')b.push(['l15','↺ 15°'],['r15','↻ 15°']);b.push(['dup','複製'],['del','刪除'])}
+  else{const s=CAT[it.type].s,mt=MOUNT(it.type);if(s==='door'||s==='hdoor')b.push(['hinge','⇄ 換邊'],['out','⇅ 內外']);else if(isFoldable(it.type))b.push(['fold',it.open?'⇩ 收起':'⇧ 展開']);else if(s==='door2')b.push(['out','⇅ 內外']);else if(mt!=='w')b.push(['l15','↺ 15°'],['r15','↻ 15°']);b.push(['dup','複製'],['del','刪除'])}
   if(mq.matches)b.push(['more','⋯']);
   el.innerHTML=b.map(([a,t])=>`<button data-ctx="${a}" class="${a==='del'?'del':''}" title="${{hinge:'切換鉸鏈左右',out:'切換向內／向外開',l15:'逆時針 15°',r15:'順時針 15°',wrot:'水平／垂直互換',dup:'複製',del:'刪除',more:'更多設定'}[a]}">${t}</button>`).join('');el.hidden=false;
   const host=$('vw2').getBoundingClientRect();let r=null;
@@ -611,7 +623,8 @@ function ctxBar(){const el=$('ctx'),it=cur(),w=curW();
   let x=(r.l+r.r)/2-host.left-bw/2,y=r.b-host.top+10;if(y+bh>host.height-sb)y=r.t-host.top-bh-10;
   el.style.left=clamp(x,6,Math.max(6,host.width-bw-6))+'px';el.style.top=clamp(y,52,Math.max(52,host.height-bh-sb))+'px'}
 $('ctx').addEventListener('click',e=>{const bt=e.target.closest('[data-ctx]');if(!bt)return;const a=bt.dataset.ctx,it=cur();
-  if(a==='hinge'||a==='out'){flipDoor(it,a);toast(CAT[it.type].s==='door'?`開門方向：鉸鏈${it.hinge==='R'?'右':'左'}・${it.out?'向外':'向內'}開`:`開門方向：${it.out?'向外':'向內'}開`);return}
+  if(a==='hinge'||a==='out'){flipDoor(it,a);toast(isSwing(it.type)?`開門方向：鉸鏈${it.hinge==='R'?'右':'左'}・${it.out?'向外':'向內'}開`:`開門方向：${it.out?'向外':'向內'}開`);return}
+  if(a==='fold'){toggleOpen(it);return}
   if(a==='more'){openSheet('obj');return}act(a==='wrot'?'rot':a)});
 function setTool(m){mode2=m;$('mSel').classList.toggle('on',m==='sel');$('mWall').classList.toggle('on',m==='wall');svg.classList.toggle('drawing',m==='wall');if(m==='wall'){sel=null;if(tab!=='2d')setTab('2d')}draw2d();props()}
 $('mSel').onclick=()=>setTool('sel');$('mWall').onclick=()=>setTool(mode2==='wall'?'sel':'wall');
@@ -622,7 +635,7 @@ let drag=null;
 svg.addEventListener('pointerdown',e=>{if(e.button>0)return;svg.setPointerCapture(e.pointerId);const p=pt(e);
   if(mode2==='wall'){const q=snapPt(p);selW=null;drag={nw:true,x0:q.x,y0:q.y,x1:q.x,y1:q.y};draw2d();return}
   const h=e.target.closest('.hd'),g0=e.target.closest('.it'),tid=g0?+g0.dataset.id:(h&&sel!=null?sel:null),now=Date.now(),ti=tid!=null&&S.items.find(i=>i.id===tid);
-  if(ti&&['door','door2'].includes(CAT[ti.type].s)&&lastTap.id===tid&&now-lastTap.t<450){lastTap={};sel=tid;selW=null;flipDoor(ti,'cycle');toast(CAT[ti.type].s==='door'?`開門方向：鉸鏈${ti.hinge==='R'?'右':'左'}・${ti.out?'向外':'向內'}開`:`開門方向：${ti.out?'向外':'向內'}開`);return}
+  if(ti&&['door','door2','hdoor'].includes(CAT[ti.type].s)&&lastTap.id===tid&&now-lastTap.t<450){lastTap={};sel=tid;selW=null;flipDoor(ti,'cycle');toast(isSwing(ti.type)?`開門方向：鉸鏈${ti.hinge==='R'?'右':'左'}・${ti.out?'向外':'向內'}開`:`開門方向：${ti.out?'向外':'向內'}開`);return}
   lastTap={id:tid,t:now};
   if(h&&h.dataset.r&&cur()){commit();drag={ro:true,moved:false};return}
   if(h&&h.dataset.e&&curW()){commit();drag={we:+h.dataset.e,moved:false};return}
@@ -682,7 +695,7 @@ function props(){const it=cur(),w=curW(),el=$('props');status();$('mbObj').class
    <div class="row">${[['-15','↺ 15°'],['15','↻ 15°'],['-90','↺ 90°'],['90','↻ 90°'],['z','歸零']].map(([v,t])=>`<button data-ro="${v}">${t}</button>`).join('')}</div>`}
    ${mt==='w'?`<label class="f">離地 cm<input data-p="elev" type="number" min="0" value="${it.elev}"></label>`:''}
    ${['window','balcony','fold'].includes(c.s)?`<label class="f">窗簾<span><input type="checkbox" data-p="cur" ${it.cur!==false?'checked':''} style="width:22px;height:22px;min-height:0;vertical-align:middle"> 顯示窗簾</span></label>`:''}
-   ${c.s==='door'||c.s==='door2'?`<div class="row" style="margin:6px 0">${c.s==='door'?`<button data-door="hinge">${it.hinge==='R'?'鉸鏈：右 ⇄':'鉸鏈：左 ⇄'}</button>`:''}<button data-door="out">${it.out?'向外開 ⇅':'向內開 ⇅'}</button></div><p class="tip" style="margin-top:0">平面圖上雙擊門也可以切換開門方向</p>`:''}
+   ${isFoldable(it.type)?`<div class="row" style="margin:6px 0"><button data-ctx2="fold">${it.open?'⇩ 收起':'⇧ 展開'}</button></div>`:''}${c.s==='door'||c.s==='door2'||c.s==='hdoor'?`<div class="row" style="margin:6px 0">${c.s!=='door2'?`<button data-door="hinge">${it.hinge==='R'?'鉸鏈：右 ⇄':'鉸鏈：左 ⇄'}</button>`:''}<button data-door="out">${it.out?'向外開 ⇅':'向內開 ⇅'}</button></div><p class="tip" style="margin-top:0">平面圖上雙擊門也可以切換開門方向</p>`:''}
    <label class="f">顏色<input data-p="color" type="color" value="${it.color}"></label>
    <label class="f">價格 NT$<input data-p="price" type="number" min="0" step="100" value="${it.price}"></label>
    ${bad?'<p class="warn">這件家具和別的家具或牆重疊，或超出房間範圍。</p>':''}`}
@@ -697,9 +710,13 @@ $('props').addEventListener('change',e=>{if(e.target.id==='rotR'){rangeEd=false;
     normW(w);S.items.filter(i=>i.wid===w.id).forEach(resnap);all();return}
   const p=e.target.dataset.p,it=cur();if(!p||!it)return;commit();let v=p==='cur'?e.target.checked:e.target.value;
   if(p==='rot')v=nrot(+v||0);else if(['w','d','h','price','elev'].includes(p))v=Math.max(p==='price'||p==='elev'?0:1,+v||0);it[p]=v;if(p==='w'||p==='d'||p==='elev')resnap(it);all()});
+function toggleOpen(it){commit();const c=CAT[it.type],od=it.d,mw=MOUNT(it.type)==='w';it.open=!it.open;
+  const shut=c.s==='wallbed'?45:10,ext=c.s==='wallbed'?215:55;it.d=it.open?shut+ext:shut;
+  if(mw)resnap(it);else{const r=it.rot*Math.PI/180,dd=(it.d-od)/2;it.x+=-Math.sin(r)*dd;it.y+=Math.cos(r)*dd}
+  all();toast(it.open?'已展開':'已收起')}
 function flipDoor(it,what){commit();if(what==='hinge')it.hinge=it.hinge==='R'?'L':'R';else if(what==='out')it.out=!it.out;
   else{if(CAT[it.type].s==='door2')it.out=!it.out;else{const k=(it.hinge==='R'?1:0)+(it.out?2:0),n=(k+1)%4;it.hinge=n&1?'R':'L';it.out=!!(n&2)}}all()}
-$('props').addEventListener('click',e=>{const dr=e.target.closest('[data-door]');if(dr&&cur()){flipDoor(cur(),dr.dataset.door);return}const ro=e.target.dataset.ro,it=cur();if(ro&&it){commit();it.rot=ro==='z'?0:nrot(it.rot+(+ro));all();return}
+$('props').addEventListener('click',e=>{if(e.target.closest('[data-ctx2=fold]')&&cur()){toggleOpen(cur());return}const dr=e.target.closest('[data-door]');if(dr&&cur()){flipDoor(cur(),dr.dataset.door);return}const ro=e.target.dataset.ro,it=cur();if(ro&&it){commit();it.rot=ro==='z'?0:nrot(it.rot+(+ro));all();return}
   const q=e.target.dataset.q;if(!q||!it)return;commit();
   if(q==='reset'){const c=CAT[it.type];it.w=c.w;it.h=c.h;if(!it.wid)it.d=c.d}else{const k=q[0],dv=+q.slice(1);it[k]=Math.max(5,it[k]+dv)}resnap(it);all()});
 function act(a){const w=curW();
@@ -727,7 +744,7 @@ function syncRoom(){const r=S.room;$('rw').value=r.w;$('rd').value=r.d;$('rh').v
 $('wlist').addEventListener('click',e=>{const s_=e.target.dataset.ws,d_=e.target.dataset.wd;if(s_){sel=null;selW=+s_;if(mode2==='wall')setTool('sel');if(tab!=='2d')setTab('2d');if(mq.matches)openSheet('obj');all()}
   if(d_){selW=+d_;sel=null;act('del')}});
 $('floor').addEventListener('change',e=>{commit();S.floor=e.target.value;S.prices.floor=FLOORS[S.floor].p;all()});
-$('wall').addEventListener('change',e=>{commit();S.wall=e.target.value;all()});
+$('wall').addEventListener('change',e=>{commit();S.wall=e.target.value;S.items.forEach(i=>{if(CAT[i.type].k==='wallc')i.color=S.wall});all()});
 $('ceil').addEventListener('change',e=>{commit();S.ceil.type=e.target.value;S.prices.ceil=CEIL[S.ceil.type].p;all()});
 $('ceilc').addEventListener('change',e=>{commit();S.ceil.color=e.target.value;all()});
 [['pf','floor'],['pc','ceil'],['pw','wall'],['pp','paint'],['pm','misc']].forEach(([id,k])=>$(id).addEventListener('change',e=>{commit();S.prices[k]=Math.max(0,+e.target.value||0);all()}));
@@ -918,6 +935,25 @@ function parts(it){const{w,d,h,color:c}=it,st=STYLES[S.style]||STYLES.nordic,leg
       P.push(E(dx*L*0.78,b+dy*L*0.78,dz*L*0.78,L*0.2,0.9,L*0.5,shade(c,(rnd()-0.5)*0.3),'leaf',[-(Math.PI/2-t),a,0,'YXZ']))}break}
   case'rug':P.push(B(0,0.6,0,w,1.2,d,c,'fabric',0.5),B(0,1.25,0,w-16,0.1,d-16,shade(c,0.14),'fabric',0.05),B(0,1.32,0,w-24,0.1,d-24,c,'fabric',0.05));break;
   case'rugR':P.push(C(0,0.6,0,w/2,w/2,1.2,c,'fabric',72),C(0,1.25,0,w/2-8,w/2-8,0.1,shade(c,0.14),'fabric',72),C(0,1.32,0,w/2-12,w/2-12,0.1,c,'fabric',72));break;
+  case'hidWard':{const n=Math.max(2,Math.round(w/60)),fw=w/n,gap='#00000033',pm='plain';P.push(B(0,4,-2,w-2,8,d-6,shade(c,-0.45),'plain',0.3),B(0,(8+h)/2,-0.5,w,h-8,d-1,c,pm,0.3));
+    for(let i=0;i<n;i++){const x=-w/2+fw*(i+0.5);P.push(B(x,(8+h)/2,d/2-0.6,fw-0.5,h-9,1.2,c,pm,0.2))}for(let i=1;i<n;i++)P.push(B(-w/2+fw*i,(8+h)/2,d/2-0.3,0.4,h-9,0.8,shade(c,-0.35),'plain',0.1));
+    P.push(B(0,h*0.55,d/2-0.3,w,0.4,0.8,shade(c,-0.25),'plain',0.1));break}
+  case'hidWall':{const nw=Math.min(140,w*0.4),side=(w-nw)/2,pm='plain';P.push(B(0,4,-2,w-2,8,d-6,shade(c,-0.45),'plain',0.3));
+    for(const s2 of[-1,1]){const cx=s2*(nw/2+side/2),n=Math.max(1,Math.round(side/60)),fw=side/n;P.push(B(cx,(8+h)/2,-0.5,side,h-8,d-1,c,pm,0.3));for(let i=0;i<n;i++){const x=cx-side/2+fw*(i+0.5);P.push(B(x,(8+h)/2,d/2-0.6,fw-0.5,h-9,1.2,c,pm,0.2))}for(let i=0;i<=n;i++)P.push(B(cx-side/2+fw*i,(8+h)/2,d/2-0.3,0.4,h-9,0.8,shade(c,-0.35),'plain',0.1))}
+    const wd=shade(st.wood,-0.05);P.push(B(0,h/2,-d/2+1.5,nw,h,3,wd,'wood',0.3),B(0,h-12,0,nw,24,d,c,pm,0.3),B(0,25,0,nw,50,d,c,pm,0.3),B(0,25,d/2-0.6,nw-0.5,49,1.2,c,pm,0.2),
+      B(0,h*0.32,-d/2+18,nw-10,3,30,wd,'wood',0.6),B(0,h*0.32+46,-d/2+5,Math.min(nw-20,120),68,3,'#151517','metal',0.8),B(0,h*0.32+46,-d/2+6.6,Math.min(nw-20,120)-1.6,66,0.3,'#050507','screen',0.1),C(-nw*0.3,h*0.32+10,-d/2+18,4,4,16,'#e9e4da','ceramic'),B(0,h-25,-d/2+12,nw-4,1,20,'#fff2d6','emit',0.2));break}
+  case'hdoor':P.push(B(0,h/2,0,w-0.6,h-0.5,d,c,'plain',0.2),B(-w/2+0.2,h/2,d/2+0.05,0.4,h,0.2,shade(c,-0.35),'plain',0.05),B(w/2-0.2,h/2,d/2+0.05,0.4,h,0.2,shade(c,-0.35),'plain',0.05),B(0,h-0.2,d/2+0.05,w,0.4,0.2,shade(c,-0.35),'plain',0.05),B(0,h/2,-d/2-0.05,w,h,0.2,c,'plain',0.05));break;
+  case'wallbed':{const cd=45,zc=-d/2+cd/2,pm='plain',seam=shade(c,-0.35);P.push(B(-w/2+2.5,h/2,zc,5,h,cd,c,pm,0.3),B(w/2-2.5,h/2,zc,5,h,cd,c,pm,0.3),B(0,h-2.5,zc,w,5,cd,c,pm,0.3),B(0,4,zc,w-10,8,cd-4,shade(c,-0.45),pm,0.3),B(0,h/2,-d/2+1.5,w-10,h-10,3,shade(c,-0.12),pm,0.2));
+    if(!it.open){P.push(B(0,(8+h-5)/2,d/2-1.6,w-10.6,h-13.6,3,c,pm,0.2),B(0,h*0.5,d/2-0.1,w-10,0.4,0.3,seam,pm,0.05))}
+    else{const L=d-cd,bz=-d/2+cd+L/2;P.push(B(0,27,bz,w-10,6,L,c,pm,0.6),B(0,39,bz,w-14,18,L-6,'#f3f1ec','fabric',6),B(0,47,bz+L*0.14,w-12,6,L*0.62,st.fabric,'fabric',2.5),B(0,46.5,bz-L*0.17+8,w-12.5,3.5,12,shade(st.fabric,0.1),'fabric',1.4));
+      const pn=w>=120?2:1;for(let i=0;i<pn;i++)P.push(B(pn>1?(i?1:-1)*(w-10)/4:0,52,-d/2+cd+20,(w-10)/pn-14,10,30,'#fbfaf7','fabric',5));for(const s2 of[-1,1])P.push(B(s2*(w/2-14),12,d/2-6,4,24,4,'#9aa0a6','metal',1))}
+    break}
+  case'foldDesk':{const cd=10,zc=-d/2+cd/2,pm='plain';P.push(B(0,77.5,zc,w,75,cd,c,pm,0.3));
+    if(!it.open)P.push(B(0,77.5,-d/2+cd-0.2,w-0.6,74,0.6,shade(c,-0.3),pm,0.05),B(0,77.5,-d/2+cd+0.1,w-1.2,73.4,0.4,c,pm,0.05));
+    else{const L=d-cd,dz=-d/2+cd+L/2,pal=['#7b2e2e','#2f4b6e','#c9b38b','#3d5a45'];P.push(B(0,96,-d/2+cd+0.2,w-8,34,0.4,shade(c,-0.25),pm,0.05),B(0,94,-d/2+cd+2,w-8,1.5,4,c,pm,0.3),
+      B(0,73.5,dz,w,3,L,c,pm,0.8),B(0,75.3,dz,w-2,0.6,L-2,st.wood,'wood',0.2),B(-w*0.05,76.2,dz+2,32,1.2,22,'#c8ccd0','metal',0.6),B(-w*0.05,88,dz-8,32,22,0.8,'#2a2a2c','metal',0.4,[-0.25,0,0]));
+      for(const s2 of[-1,1])P.push(C(s2*(w/2-6),36,d/2-5,1.4,1.4,72,'#9aa0a6','metal',12));for(let i=0;i<4;i++)P.push(B(w*0.25+i*3.2,103,-d/2+cd+1.5,2.6,16,3,pal[i],'plain',0.3))}
+    break}
   case'chaise':sofaParts(P,0,0,w,d,h,c,leg,{L:true,R:false,n:1});P.push(B(-w/2+40,h*0.5+17,-d/2+30,40,34,12,st.rug,'fabric',6,[-0.3,0.15,0]));break;
   case'beanbag':P.push(E(0,h*0.4,0,w,h*0.8,d,c,'fabric'),E(0,h*0.62,-d*0.22,w*0.82,h*0.7,d*0.5,shade(c,0.04),'fabric'));break;
   case'accent':{legs(22,6,6);P.push(B(0,30,0,w-8,16,d-4,c,'fabric',5),B(0,(38+h)/2,-d/2+9,w-10,h-38,12,shade(c,0.03),'fabric',6,[-0.18,0,0]));for(const s of[-1,1])P.push(B(s*(w/2-3),52,0,6,4,d-2,leg,'wood',1.5),B(s*(w/2-3),37,d/2-6,4,30,4,leg,'wood',1));break}
