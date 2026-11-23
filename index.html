@@ -49,6 +49,11 @@ details.grp summary small{color:var(--mut);font-weight:400;margin-left:6px}
 .tabs .sep{flex:1}
 .view{position:relative;flex:1;min-height:480px;background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden}
 #plan{position:absolute;inset:0;width:100%;height:calc(100% - 34px);touch-action:none;user-select:none;cursor:default}
+#ctx{position:absolute;z-index:4;display:flex;gap:4px;padding:4px;background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:0 6px 20px #0000002e;white-space:nowrap}
+#ctx[hidden]{display:none}
+#ctx button{min-height:40px;padding:0 11px;font-size:14px;border-color:transparent;background:var(--soft);font-weight:500}
+#ctx button:hover{border-color:var(--acc);color:var(--acc)}
+#ctx button.del{color:var(--bad)}
 #plan.pan{cursor:grabbing}.tabs,.float,#cat,.status{-webkit-user-select:none;user-select:none}#plan.drawing{cursor:crosshair}.hd{cursor:nwse-resize}.hr{cursor:grab}.wl{cursor:move}
 .float{position:absolute;top:10px;left:10px;display:flex;gap:6px;flex-wrap:wrap;z-index:3}
 .float button{min-width:40px;padding:0 10px;background:var(--panel);box-shadow:0 1px 3px #0001}
@@ -154,6 +159,7 @@ dialog{width:94vw}
       <div class="float"><button id="mSel" class="on">選取</button><button id="mWall" title="快捷鍵 W">畫牆</button><button id="zo2" aria-label="縮小">－</button><button id="zi2" aria-label="放大">＋</button><button id="zf2">適合畫面</button><button id="lyC" class="on">天花物件</button><button id="lyD" class="on">距離標註</button></div>
       <svg id="plan" xmlns="http://www.w3.org/2000/svg"></svg>
       <div class="status" id="st2"></div>
+      <div id="ctx" hidden></div>
     </div>
     <div class="view" id="vw3" hidden><div id="v3"></div>
       <div class="help3" id="h3"></div>
@@ -547,7 +553,7 @@ function draw2d(){const W=S.room.w,D=S.room.d,base=Math.max(W,D),m=base/(mq.matc
   const items=layer.map(({it,o})=>{const s=it.id===sel,bd=bad.has(it.id),tc=lum(it.color)>0.55?'#2a2925':'#fff';
     const lbl=s?`<text transform="rotate(${-it.rot})" y="${fp(it).d/2+fs*1.3}" text-anchor="middle" font-size="${fs*0.8}" fill="var(--acc)" font-weight="700" pointer-events="none" paint-order="stroke" stroke="var(--panel)" stroke-width="${fs*0.3}">${esc(it.name)} · ${Math.round(it.w)}×${Math.round(it.d)}${it.rot&&MOUNT(it.type)!=='w'?' · '+it.rot+'°':''}</text>`:'';
     const ce=o===3?`<rect x="${-it.w/2-3}" y="${-it.d/2-3}" width="${it.w+6}" height="${it.d+6}" rx="4" fill="none" stroke="var(--acc)" stroke-opacity=".5" stroke-width="${fs*0.07}" stroke-dasharray="${fs*0.35} ${fs*0.25}"/>`:'';
-    return`<g class="it" data-id="${it.id}" transform="translate(${it.x} ${it.y}) rotate(${it.rot})" ${o===3?'opacity=".85"':''}>${Math.min(it.w,it.d)<30*upp?`<rect x="${-Math.max(it.w,30*upp)/2}" y="${-Math.max(it.d,30*upp)/2}" width="${Math.max(it.w,30*upp)}" height="${Math.max(it.d,30*upp)}" fill="transparent"/>`:''}${ce}${sym(it,tc,fs,s?'var(--acc)':bd?'#d2372b':null,s||bd?fs*0.28:fs*0.08,bd&&!s)}</g>${lbl?`<g transform="translate(${it.x} ${it.y}) rotate(${it.rot})" pointer-events="none">${lbl}</g>`:''}`}).join('');
+    return`<g class="it" data-id="${it.id}" transform="translate(${it.x} ${it.y}) rotate(${it.rot})" ${o===3?'opacity=".85"':''}>${Math.min(it.w,it.d)<30*upp?`<rect x="${-Math.max(it.w,30*upp)/2}" y="${-Math.max(it.d,30*upp)/2}" width="${Math.max(it.w,30*upp)}" height="${Math.max(it.d,30*upp)}" fill="transparent"/>`:''}${ce}${sym(it,tc,fs,s?'var(--acc)':bd?'#d2372b':null,s||bd?fs*0.28:fs*0.08,bd&&!s)}</g>${lbl?`<g class="selx" transform="translate(${it.x} ${it.y}) rotate(${it.rot})" pointer-events="none">${lbl}</g>`:''}`}).join('');
   const tk=fs*0.35,seg=(ax,ay,bx,by,v)=>{if(v<1)return'';const mx=(ax+bx)/2,my=(ay+by)/2,hz=ay===by;return`<line x1="${ax}" y1="${ay}" x2="${bx}" y2="${by}"/>`+(hz?`<line x1="${ax}" y1="${ay-tk}" x2="${ax}" y2="${ay+tk}"/><line x1="${bx}" y1="${by-tk}" x2="${bx}" y2="${by+tk}"/>`:`<line x1="${ax-tk}" y1="${ay}" x2="${ax+tk}" y2="${ay}"/><line x1="${bx-tk}" y1="${by}" x2="${bx+tk}" y2="${by}"/>`)+
     `<text x="${mx}" y="${my}" dy="${hz?-fs*0.35:fs*0.3}" dx="${hz?0:fs*0.4}" text-anchor="${hz?'middle':'start'}" stroke="var(--panel)" stroke-width="${fs*0.3}" paint-order="stroke" fill="var(--acc)">${Math.round(v)}</text>`};
   let dim='',hd='';const it=cur(),cw=curW();
@@ -559,7 +565,7 @@ function draw2d(){const W=S.room.w,D=S.room.d,base=Math.max(W,D),m=base/(mq.matc
     for(const sx of[-1,0,1])for(const sy of[-1,0,1]){if((!sx&&!sy)||(mw&&sy))continue;const x=sx*it.w/2,y=sy*it.d/2;
       h+=`<rect class="hd" data-h="${sx},${sy}" x="${x-hit/2}" y="${y-hit/2}" width="${hit}" height="${hit}" fill="transparent"/><rect x="${x-hs/2}" y="${y-hs/2}" width="${hs}" height="${hs}" rx="${hs*0.2}" fill="#fff" stroke="var(--acc)" stroke-width="${fs*0.1}" pointer-events="none"/>`}
     if(!mw){const ry=-it.d/2-Math.max(hs*3.2,fs*2);h+=`<line x1="0" y1="${-it.d/2}" x2="0" y2="${ry}" stroke="var(--acc)" stroke-width="${fs*0.08}" pointer-events="none"/><circle class="hd hr" data-r="1" cx="0" cy="${ry}" r="${hit/2}" fill="transparent"/><circle cx="0" cy="${ry}" r="${hs*0.62}" fill="var(--acc)" stroke="#fff" stroke-width="${fs*0.08}" pointer-events="none"/><path d="M${-hs*0.28} ${ry-hs*0.05}a${hs*0.3} ${hs*0.3} 0 1 1 ${hs*0.1} ${hs*0.28}" fill="none" stroke="#fff" stroke-width="${fs*0.07}" pointer-events="none"/>`}
-    hd=`<g transform="translate(${it.x} ${it.y}) rotate(${it.rot})">${h}</g>`}
+    hd=`<g class="selx" transform="translate(${it.x} ${it.y}) rotate(${it.rot})">${h}</g>`}
   if(cw){const hz=isH(cw),r=wrect(cw),mx=(cw.x1+cw.x2)/2,my=(cw.y1+cw.y2)/2,o=cw.t/2+fs*0.9;
     hd+=[1,2].map(k=>`<circle class="hd" data-e="${k}" cx="${cw['x'+k]}" cy="${cw['y'+k]}" r="${hit/2}" fill="transparent"/><circle cx="${cw['x'+k]}" cy="${cw['y'+k]}" r="${hs*0.6}" fill="#fff" stroke="var(--acc)" stroke-width="${fs*0.12}" pointer-events="none"/>`).join('')+
       `<text ${hz?`x="${mx}" y="${my-o}" text-anchor="middle"`:`transform="translate(${mx+o} ${my}) rotate(90)" text-anchor="middle"`} font-size="${fs*0.8}" font-weight="700" fill="var(--acc)" stroke="var(--panel)" stroke-width="${fs*0.3}" paint-order="stroke" pointer-events="none">${wlen(cw)} cm</text>`;
@@ -572,7 +578,7 @@ function draw2d(){const W=S.room.w,D=S.room.d,base=Math.max(W,D),m=base/(mq.matc
     <rect x="-6" y="-6" width="${W+12}" height="${D+12}" fill="none" stroke="var(--ink)" stroke-width="12"/>
     <g font-size="${fs*0.8}" fill="var(--mut)" text-anchor="middle"><text x="${W/2}" y="${-fs*1.4}">${W} cm</text><text transform="translate(${-fs*1.4} ${D/2}) rotate(-90)">${D} cm</text></g>
     ${walls}${items}${pre}${dim}${hd}`;
-  status()}
+  status();ctxBar()}
 function status(){const it=cur(),w=curW();let h;
   if(w)h=`<b>隔間牆</b><span>長 ${wlen(w)} cm · 厚 ${w.t} cm · 高 ${w.h?w.h+' cm':'到天花'}</span><span class="opt">拖兩端圓點改長度 · 拖牆身移動 · Delete 刪除</span>`;
   else if(mode2==='wall')h='<b>畫牆模式</b><span>拖曳畫牆；點一下現有的牆或家具可選取</span><span class="opt">Esc 或「選取」結束</span>';
@@ -580,6 +586,20 @@ function status(){const it=cur(),w=curW();let h;
   else h=`<span>${S.items.length} 件物件 · ${S.walls.length} 道隔間牆</span><span class="opt">滾輪縮放 · 拖曳空白處平移 · W 畫牆 · R 旋轉</span>`;
   $('st2').innerHTML=h+`<span class="opt">縮放 ${Math.round(vz*100)}%</span>`;
   ['bDup','bDel'].forEach(b=>$(b).disabled=!it&&!w);['bRotL','bRotR'].forEach(b=>$(b).disabled=!w&&!(it&&MOUNT(it.type)!=='w'))}
+function ctxBar(){const el=$('ctx'),it=cur(),w=curW();
+  if(tab!=='2d'||(!it&&!w)||(drag&&!drag.pan)||pinch){el.hidden=true;return}
+  let b=[];if(w)b=[['wrot','⟲ 轉向'],['dup','複製'],['del','刪除']];
+  else{const s=CAT[it.type].s,mt=MOUNT(it.type);if(s==='door')b.push(['hinge','⇄ 換邊'],['out','⇅ 內外']);else if(s==='door2')b.push(['out','⇅ 內外']);else if(mt!=='w')b.push(['l15','↺ 15°'],['r15','↻ 15°']);b.push(['dup','複製'],['del','刪除'])}
+  if(mq.matches)b.push(['more','⋯']);
+  el.innerHTML=b.map(([a,t])=>`<button data-ctx="${a}" class="${a==='del'?'del':''}" title="${{hinge:'切換鉸鏈左右',out:'切換向內／向外開',l15:'逆時針 15°',r15:'順時針 15°',wrot:'水平／垂直互換',dup:'複製',del:'刪除',more:'更多設定'}[a]}">${t}</button>`).join('');el.hidden=false;
+  const host=$('vw2').getBoundingClientRect();let r=null;
+  [...svg.querySelectorAll(w?`.wl[data-w="${w.id}"]`:`.it[data-id="${it.id}"]`),...svg.querySelectorAll('.selx')].forEach(e=>{const q=e.getBoundingClientRect();if(!q.width&&!q.height)return;r=r?{l:Math.min(r.l,q.left),t:Math.min(r.t,q.top),r:Math.max(r.r,q.right),b:Math.max(r.b,q.bottom)}:{l:q.left,t:q.top,r:q.right,b:q.bottom}});
+  if(!r){el.hidden=true;return}const bw=el.offsetWidth,bh=el.offsetHeight,sb=$('st2').offsetHeight+6;
+  let x=(r.l+r.r)/2-host.left-bw/2,y=r.b-host.top+10;if(y+bh>host.height-sb)y=r.t-host.top-bh-10;
+  el.style.left=clamp(x,6,Math.max(6,host.width-bw-6))+'px';el.style.top=clamp(y,52,Math.max(52,host.height-bh-sb))+'px'}
+$('ctx').addEventListener('click',e=>{const bt=e.target.closest('[data-ctx]');if(!bt)return;const a=bt.dataset.ctx,it=cur();
+  if(a==='hinge'||a==='out'){flipDoor(it,a);toast(CAT[it.type].s==='door'?`開門方向：鉸鏈${it.hinge==='R'?'右':'左'}・${it.out?'向外':'向內'}開`:`開門方向：${it.out?'向外':'向內'}開`);return}
+  if(a==='more'){openSheet('obj');return}act(a==='wrot'?'rot':a)});
 function setTool(m){mode2=m;$('mSel').classList.toggle('on',m==='sel');$('mWall').classList.toggle('on',m==='wall');svg.classList.toggle('drawing',m==='wall');if(m==='wall'){sel=null;if(tab!=='2d')setTab('2d')}draw2d();props()}
 $('mSel').onclick=()=>setTool('sel');$('mWall').onclick=()=>setTool(mode2==='wall'?'sel':'wall');
 function pt(e){const p=svg.createSVGPoint();p.x=e.clientX;p.y=e.clientY;return p.matrixTransform(svg.getScreenCTM().inverse())}
@@ -1032,7 +1052,7 @@ function build3d(){if(!init3d())return;const{g,cg,dl}=R,W=S.room.w,D=S.room.d,H=
   const M=Math.max(W,D);dl.position.set(W*0.45,H*2.4,D*0.7);dl.target.position.set(0,0,0);Object.assign(dl.shadow.camera,{left:-M,right:M,top:M,bottom:-M,near:10,far:M*6});dl.shadow.camera.updateProjectionMatrix();
   if(mode==='walk'){walk.x=clamp(walk.x,-W/2+25,W/2-25);walk.z=clamp(walk.z,-D/2+25,D/2-25)}
   cam3()}
-function setTab(t){tab=t;$('t2').classList.toggle('on',t==='2d');$('t3').classList.toggle('on',t==='3d');$('vw2').hidden=t!=='2d';$('vw3').hidden=t!=='3d';if(t==='3d'){build3d();modeBtns();need=true}}
+function setTab(t){tab=t;if(t!=='2d')$('ctx').hidden=true;$('t2').classList.toggle('on',t==='2d');$('t3').classList.toggle('on',t==='3d');$('vw2').hidden=t!=='2d';$('vw3').hidden=t!=='3d';if(t==='3d'){build3d();modeBtns();need=true}}
 $('t2').onclick=()=>setTab('2d');$('t3').onclick=()=>setTab('3d');
 
 /* ================= mobile ================= */
